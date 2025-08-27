@@ -19,6 +19,7 @@ bot = commands.Bot(command_prefix='$', intents=intents)
 @bot.event
 async def on_ready():
     print(f'Login efetuado como {bot.user}')
+    print('LEIA O README ANTES DE USAR O BOT!')
     print('OharaBot está pronto para uso!')
     print('=================================')
 
