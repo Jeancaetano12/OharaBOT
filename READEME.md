@@ -1,3 +1,5 @@
+Cntl + Shift + V pra ler melhor
+
 # Pra começar a testar o bot:
 - Instalar a versão python 3.12.3 e garantir que está usando ela no sistema
 - **TROQUE A BRANCH!** Se você clonou a **main** troque para a branch **testes** com o comando: `git checkout testes` antes de seguir adiante.
