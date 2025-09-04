@@ -2,7 +2,7 @@
 
 import discord
 from discord.ext import commands
-from discord.ui import Modal, View, Select
+from discord.ui import View, Select
 from discord.utils import get
 
 # --- PASSO 1: DEFINIÇÃO DAS CLASSES DE UI (A PARTE QUE FALTAVA) ---
@@ -78,7 +78,7 @@ class FormularioView(View):
             print(f"[DEBUG] Guild encontrada: '{guild.name}'")
         
             print(f"[DEBUG] Passo 5: Buscando o membro com ID: {interaction.user.id} no servidor '{guild.name}'")
-            membro_no_servidor = await guild.fetch_member(interaction.user.id)
+            membro_no_servidor = await guild.fetch_member(interaction.user.id) # <<< Guarda o usuario nessa variavel
             if not membro_no_servidor:
                 print(f"[ERRO CRÍTICO] Membro com ID {interaction.user.id} não encontrado no servidor.")
                 await interaction.followup.send("Erro interno: Não te encontrei no servidor. Avise um ADM!", ephemeral=True)
@@ -114,7 +114,7 @@ class FormularioView(View):
 
             # PASSO 10: Enviar mensagem de sucesso
             print("[DEBUG] Passo 10: Enviando followup de sucesso.")
-            await interaction.followup.send("✅ Tudo certo! Seus cargos foram atribuídos com sucesso!", ephemeral=True)
+            await interaction.followup.send("✅ Tudo certo! Seus cargos foram atribuídos com sucesso e você deve conseguir ver todo o servidor agora! 🎊", ephemeral=True)
             print("--- CALLBACK 'ENVIAR RESPOSTAS' FINALIZADO COM SUCESSO ---")
 
         except Exception as e:
@@ -135,7 +135,7 @@ class RegistroView(View):
         print(f"\n[DEBUG] Botão 'Iniciar Registro' clicado por {interaction.user.name}")
         print(f"[AÇÃO] Enviando formulário para {interaction.user.name}...")
         await interaction.response.edit_message(
-            content="Me ajude a te ajudar selecionando as opções abaixo e clicando em 'Enviar Respostas' quando terminar 😉",
+            content="Show! Me responde essas coisinhas pro pessoal do nosso servidor te conhecer melhor?",
             view=FormularioView(membro=interaction.user)
         )
        
@@ -156,7 +156,7 @@ class Registro(commands.Cog):
         
         mensagem_dm = (
             f"Oii👋 {member.mention}, Seja Bem-vindo(a) ao **{member.guild.name}**!\n\n"
-            "Eu sou o 🤖 Robozinho amigo dos ADMS que veio te ajudar a ter acesso completo ao servidor, por favor, complete seu registro clicando no botão abaixo. ⬇️"
+            "Eu sou o 🤖 Robozinho amigo dos ADMs que veio te ajudar a ter acesso completo ao servidor. Por favor, inicie seu registro clicando no botão abaixo. ⬇️"
         )
         
         try:

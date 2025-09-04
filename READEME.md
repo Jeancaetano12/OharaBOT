@@ -8,6 +8,7 @@ Cntl + Shift + V pra ler melhor
 - **GARANTIR** estar com o ambiente virtual ativado e utilizando ele antes de instalar as dependencias. Você vai saber que está dentro do ambiente virtual quando aparecer na sua linha do console **VENV** no `começo da linha`.
 - Use `pip install -r requirements.txt` para instalar os requerimentos
 - **QUANDO** for liberado para você digitar de novo no console inicie o bot com o comando: `python .\bot.py`
+- Terminou de usar o bot? Use `deactivate` para fechar o ambiente virtual
 
 ## Regrinhas:
 
