@@ -5,7 +5,50 @@ from discord.ext import commands
 from discord.ui import View, Select
 from discord.utils import get
 
-# --- PASSO 1: DEFINIÇÃO DAS CLASSES DE UI (A PARTE QUE FALTAVA) ---
+# --- COG DE DIAGNÓSTICO DE PERMISSÕES ---
+
+class Diagnostico(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.command(name="verificar_permissoes")
+    @commands.has_permissions(administrator=True) 
+    async def verificar_permissoes(self, ctx):
+        bot_membro = ctx.guild.me
+        if bot_membro.guild_permissions.manage_roles:
+            print(f"[DEBUG] O bot tem permissão para Gerenciar Cargos no servidor '{ctx.guild.name}'.")
+            await ctx.send("✅ Eu tenho a permissão de **Gerenciar Cargos** neste servidor!")
+        else:
+            print(f"[DEBUG] O bot NÃO tem permissão para Gerenciar Cargos no servidor '{ctx.guild.name}'.")
+            await ctx.send("❌ Eu **NÃO** tenho a permissão de **Gerenciar Cargos** neste servidor. Por favor, verifique minhas permissões e a hierarquia de cargos.")
+
+# --- COG PRINCIPAL DE REGISTRO ---
+
+class Registro(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+        self.bot.add_view(RegistroView())
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        print(f"\n[EVENTO] Novo membro detectado: {member.name} (ID: {member.id})")
+        if member.bot:
+            print(f"[INFO] O membro {member.name} é um bot. Ignorando.")
+            return
+        
+        mensagem_dm = (
+            f"Oii👋 {member.mention}, Seja Bem-vindo(a) ao **{member.guild.name}**!\n\n"
+            "Eu sou o 🤖 Robozinho amigo dos ADMs que veio te ajudar a ter acesso completo ao servidor. Por favor, inicie seu registro clicando no botão abaixo. ⬇️"
+        )
+        
+        try:
+            print(f"[AÇÃO] Tentando enviar DM para {member.name}...")
+            await member.send(mensagem_dm, view=RegistroView())
+            print(f"[SUCESSO] DM enviada para {member.name}.")
+        except discord.Forbidden:
+            print(f"[ERRO] Falha ao enviar DM para {member.name}. As DMs dele(a) podem estar fechadas.")
+
+# --- DEFINIÇÃO DAS CLASSES DE UI ---
 
 # Menu de seleção de idade
 class IdadeSelect(Select):
@@ -30,7 +73,24 @@ class GeneroSelect(Select):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
 
-# Formulario modal
+
+# View com o Botão de Início
+
+class RegistroView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+    
+    @discord.ui.button(label="📝 Iniciar Registro", style=discord.ButtonStyle.success, custom_id="botao_registro")
+    async def botao_callback(self, interaction: discord.Interaction, button: discord.Button):
+        print(f"\n[DEBUG] Botão 'Iniciar Registro' clicado por {interaction.user.name}")
+        print(f"[AÇÃO] Enviando formulário para {interaction.user.name}...")
+        await interaction.response.edit_message(
+            content="Show! Me responde essas coisinhas pro pessoal do nosso servidor te conhecer melhor?",
+            view=FormularioView(membro=interaction.user)
+        )
+
+# --- FORMULÁRIO DE REGISTRO ---
+#  
 class FormularioView(View):
     def __init__(self, membro: discord.Member):
         super().__init__(timeout=300) # Timeout de 5 minutos para o usuário responder
@@ -125,59 +185,6 @@ class FormularioView(View):
             traceback.print_exc() # Imprime o traceback completo do erro
             print("-------------------------------------------------")
             await interaction.followup.send("Ocorreu um erro crítico ao processar sua solicitação. A equipe de ADMs já foi notificada!", ephemeral=True)
-# View com o Botão de Início
-class RegistroView(View):
-    def __init__(self):
-        super().__init__(timeout=None)
-    
-    @discord.ui.button(label="📝 Iniciar Registro", style=discord.ButtonStyle.success, custom_id="botao_registro")
-    async def botao_callback(self, interaction: discord.Interaction, button: discord.Button):
-        print(f"\n[DEBUG] Botão 'Iniciar Registro' clicado por {interaction.user.name}")
-        print(f"[AÇÃO] Enviando formulário para {interaction.user.name}...")
-        await interaction.response.edit_message(
-            content="Show! Me responde essas coisinhas pro pessoal do nosso servidor te conhecer melhor?",
-            view=FormularioView(membro=interaction.user)
-        )
-       
-
-# --- ESTRUTURA DOS COGS ---
-
-class Registro(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-        self.bot.add_view(RegistroView())
-
-    @commands.Cog.listener()
-    async def on_member_join(self, member):
-        print(f"\n[EVENTO] Novo membro detectado: {member.name} (ID: {member.id})")
-        if member.bot:
-            print(f"[INFO] O membro {member.name} é um bot. Ignorando.")
-            return
-        
-        mensagem_dm = (
-            f"Oii👋 {member.mention}, Seja Bem-vindo(a) ao **{member.guild.name}**!\n\n"
-            "Eu sou o 🤖 Robozinho amigo dos ADMs que veio te ajudar a ter acesso completo ao servidor. Por favor, inicie seu registro clicando no botão abaixo. ⬇️"
-        )
-        
-        try:
-            print(f"[AÇÃO] Tentando enviar DM para {member.name}...")
-            await member.send(mensagem_dm, view=RegistroView())
-            print(f"[SUCESSO] DM enviada para {member.name}.")
-        except discord.Forbidden:
-            print(f"[ERRO] Falha ao enviar DM para {member.name}. As DMs dele(a) podem estar fechadas.")
-
-class Diagnostico(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.command(name="verificar_permissoes")
-    @commands.has_permissions(administrator=True) 
-    async def verificar_permissoes(self, ctx):
-        bot_membro = ctx.guild.me
-        if bot_membro.guild_permissions.manage_roles:
-            await ctx.send("✅ Eu tenho a permissão de **Gerenciar Cargos** neste servidor!")
-        else:
-            await ctx.send("❌ Eu **NÃO** tenho a permissão de **Gerenciar Cargos** neste servidor. Por favor, verifique minhas permissões e a hierarquia de cargos.")
 
 # --- FUNÇÃO SETUP CORRIGIDA ---
 async def setup(bot):
