@@ -3,6 +3,13 @@ from discord.ext import commands # Importa a extensão de comandos
 import os  # Importe a biblioteca os
 from dotenv import load_dotenv  # Importe a função load_dotenv
 import asyncio
+import logging
+
+logging.basicConfig(
+    level=logging.INFO, # Define o nível de log para ser exibido
+    format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 load_dotenv()  # Carrega as variáveis de ambiente do arquivo .env
 TOKEN = os.getenv("DISCORD_TOKEN")  # Obtém o token do bot
@@ -18,10 +25,10 @@ bot = commands.Bot(command_prefix='$', intents=intents)
 # Evento chamado quando o bot está online e pronto
 @bot.event
 async def on_ready():
-    print(f'Login efetuado como {bot.user}')
+    print(f'\nLogin efetuado como {bot.user}')
     print('LEIA O README ANTES DE USAR O BOT!')
     print('OharaBot está pronto para uso!')
-    print('=================================')
+    print('=================================\n')
 
 async def load_cogs():
     # Carrega todos os Cogs da pasta cogs
