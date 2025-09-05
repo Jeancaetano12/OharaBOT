@@ -12,7 +12,7 @@ class Diversao(commands.Cog):
     # --- Funções Auxiliares para ler/escrever no arquivo ---
     def _carregar_dados(self):
         if not os.path.exists(self.caminho_arquivo):
-            print("[DEBUG] Arquivo contagem.json não encontrado. Criando um novo arquivo com dados padrão.")
+            print("[DEBUG] Arquivo contagem.json não encontrado. Criando um novo arquivo com dados padrão.\n")
             dados_padrao = {
                 "silksong_deaths": 0,
                 "silksong_bosses": 0 
@@ -20,10 +20,10 @@ class Diversao(commands.Cog):
             with open(self.caminho_arquivo, 'w') as f:
                 print("[DEBUG] Criando novo arquivo contagem.json com dados padrão.")
                 json.dump(dados_padrao, f, indent=4)
-                print("[DEBUG] Arquivo contagem.json criado com sucesso.")
+                print("[DEBUG] Arquivo contagem.json criado com sucesso.\n")
             return dados_padrao
         with open(self.caminho_arquivo, 'r') as f:
-            print("[DEBUG] Carregando dados do arquivo contagem.json.")
+            print("\n[DEBUG] Carregando dados do arquivo contagem.json.")
             return json.load(f)
 
     def _salvar_dados(self, dados):

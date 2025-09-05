@@ -13,7 +13,9 @@ Cntl + Shift + V pra ler melhor
 
 ## Regrinhas:
 
-- Qualquer funcionalidade tem que ser discutida antes para evitar problema nas branchs
+- Faça seu código com o máximo de feedback no console possivel, pra facilitar a manutenção e o entendimento pro amiguinho.
+- Não faça coisas que nem **>>VOCÊ MESMO NÃO SABE COMO FUNIONA<<** Use IA direito.
+- Qualquer funcionalidade tem que ser discutida antes para evitar problema nas branchs.
 - Evite mexer com cargos, da dor de cabeça.
 - Qualquer merge com a **main** também tem que ser discutido antes pra evitar dor de cabeça.
 
