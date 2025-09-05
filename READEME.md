@@ -3,6 +3,7 @@ Cntl + Shift + V pra ler melhor
 # Pra começar a testar o bot:
 - Instalar a versão python 3.12.3 e garantir que está usando ela no sistema
 - **TROQUE A BRANCH!** Se você clonou a **main** troque para a branch **testes** com o comando: `git checkout testes` antes de seguir adiante.
+- crie um arquivo .env e `peça o token de acesso ao bot pra algum adm`.
 - Criar um ambiente virtual pra ele com o comando: `python -m venv venv`
 - **ATIVE** o ambiente virtual do bot com o comando: `.\venv\Scripts\activate`
 - **GARANTIR** estar com o ambiente virtual ativado e utilizando ele antes de instalar as dependencias. Você vai saber que está dentro do ambiente virtual quando aparecer na sua linha do console **VENV** no `começo da linha`.
