@@ -5,9 +5,10 @@ Cntl + Shift + V pra ler melhor
 - Instalar a versão python 3.12.3 e garantir que está usando ela no sistema
 - **TROQUE A BRANCH!** Se você clonou a **main** troque para a branch **testes** com o comando: `git checkout testes` antes de seguir adiante.
 - Crie um arquivo .env, declare a variavel `DISCORD_TOKEN` & `peça o token de acesso ao bot pra algum adm`.
-- Criar um ambiente virtual pra ele com o comando: `python -m venv venv`
+- Criar um ambiente virtual pra ele com o comando: python -m venv venv`
 - **ATIVE** o ambiente virtual do bot com o comando: `.\venv\Scripts\activate`
 - **GARANTIR** estar com o ambiente virtual ativado e utilizando ele antes de instalar as dependencias. Você vai saber que está dentro do ambiente virtual quando aparecer na sua linha do console **VENV** no `começo da linha`.
+- **Baixe** as bibliotecas requeridas pelo projeto `pip install -U discord.py`
 - Use `pip install -r requirements.txt` para instalar os requerimentos
 - **QUANDO** for liberado para você digitar de novo no console inicie o bot com o comando: `python .\bot.py`
 - Terminou de usar o bot? Use `deactivate` para fechar o ambiente virtual
