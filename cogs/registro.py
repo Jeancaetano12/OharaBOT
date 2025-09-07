@@ -97,7 +97,7 @@ class RegistroView(View):
 
 class FormularioView(View):
     def __init__(self, membro: discord.Member):
-        super().__init__(timeout=300) # Timeout de 5 minutos para o usuário responder
+        super().__init__(timeout=None)
         logger.info(f"Registro iniciado por {membro.name}")
         self.membro = membro # Armazena o membro para atribuir os cargos depois
 
