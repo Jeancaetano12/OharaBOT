@@ -17,7 +17,7 @@ async def check_dev_permissions(ctx):
         canal_botlog = ctx.guild.get_channel(ID_CANAL_BOTLOG)
         if canal_botlog:
             await ctx.send(f"❌ Comando permitido apenas no canal {canal_botlog.mention}.", delete_after=10)
-            logger.warning(f"Usuário '{ctx.author}' tentou usar o comando '{ctx.command}' no canal '{ctx.channel}', mas não tem permissão.")
+            logger.warning(f"❌ Usuário '{ctx.author}' tentou usar o comando '{ctx.command}' no canal '{ctx.channel}', mas não tem permissão.")
         else:
             await ctx.send("❌ Este comando só pode ser usado em um canal de controle específico.", delete_after=10)
             logger.error(f"Canal de controle com ID '{ID_CANAL_BOTLOG}' não encontrado no servidor.")
@@ -52,7 +52,7 @@ class Gerenciador(commands.Cog):
             logger.info(f"Cog '{cog_name}' carregado por '{ctx.author}'")
             await ctx.send(f"✅ Cog '{cog_name}' foi carregado com sucesso.")
         except Exception as e:
-            logger.error(f"\n Erro ao carregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}'.\n")
+            logger.error(f"Erro ao carregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}'.\n")
             await ctx.send(f"❌ Erro ao carregar o cog '{cog_name}':\n```py\n{e}\n```")
 # ---------------------------------------
 # --- DESCARREGA UM COG ESPECIFICO ---
@@ -61,10 +61,9 @@ class Gerenciador(commands.Cog):
     async def unload_cog(self, ctx, cog_name: str):
         try:
             await self.bot.unload_extension(f"cogs.{cog_name}")
-            logger.info(f"\n Cog '{cog_name}' descarregado por '{ctx.author}'\n")
             await ctx.send(f"⚠️ Cog '{cog_name}' foi descarregado com sucesso.")
         except Exception as e:
-            logger.error(f"\n Erro ao descarregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}'.\n")
+            logger.error(f"Erro ao descarregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}'.\n")
             await ctx.send(f"❌ Erro ao descarregar o cog '{cog_name}':\n```py\n{e}\n```")
 # ---------------------------------------
 # --- RECARREGA UM COG ESPECIFICO ---
@@ -73,10 +72,9 @@ class Gerenciador(commands.Cog):
     async def reload_cog(self, ctx, cog_name: str):
         try:
             await self.bot.reload_extension(f"cogs.{cog_name}")
-            logger.info(f"Cog '{cog_name}' recarregado por '{ctx.author}'")
             await ctx.send(f"✅ Cog '{cog_name}' foi recarregado com sucesso.")
         except Exception as e:
-            logger.error(f"\n Erro ao recarregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}'.\n")
+            logger.error(f"Erro ao recarregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}'.\n")
             await ctx.send(f"❌ Erro ao recarregar o cog '{cog_name}':\n```py\n{e}\n```")
 # ---------------------------------------
 # --- RECARREGA TODOS OS COGS ---
@@ -89,7 +87,7 @@ class Gerenciador(commands.Cog):
 
         cog_gerenciador = self.__class__.__name__ # Nome do cog atual
         await ctx.send("♻️ Recarregando todos os cogs...")
-        logger.info(f"\n Recarregando todos os cogs por comando de '{ctx.author}'\n")
+        logger.info(f"Recarregando todos os cogs por comando de '{ctx.author}'\n")
 
         # Recarrega todos os cogs, exceto o gerenciador
         for filename in os.listdir("./cogs"):
@@ -99,10 +97,9 @@ class Gerenciador(commands.Cog):
                     continue  # Pula o cog gerenciador para evitar problemas
                 try:
                     await self.bot.reload_extension(f"cogs.{cog_name}")
-                    logger.info(f"Cog '{cog_name}' recarregado por '{ctx.author}'")
                     reloaded_cogs.append(cog_name) # Adiciona ao array de recarregados
                 except Exception as e:
-                    logger.error(f"\n Erro ao recarregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}'.\n")
+                    logger.error(f"Erro ao recarregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}'.\n")
                     failed_cogs.append(f"`{cog_name}`: `{e}`")
         # Mensagem final
         embed = discord.Embed(
@@ -112,7 +109,7 @@ class Gerenciador(commands.Cog):
         )
 
         if reloaded_cogs:
-            embed.add_field(name="⚠️ Cogs Sendo recarregaods:", value="\n".join(f"- `{cog}`" for cog in reloaded_cogs), inline=False)
+            embed.add_field(name="⚠️ Cogs recarregados:", value="\n".join(f"- `{cog}`" for cog in reloaded_cogs), inline=False)
         if failed_cogs:
             embed.add_field(name="❌ Cogs com Falha:", value="\n".join(failed_cogs), inline=False)
         await ctx.send(embed=embed)
@@ -127,10 +124,9 @@ class Gerenciador(commands.Cog):
         # Recarrega o cog gerenciador por último
         try:
             await self.bot.reload_extension("cogs.gerenciador")
-            logger.info("Cog 'gerenciador' recarregado com sucesso.")
-            await ctx.send("✅ Cog `gerenciador` recarregado com sucesso.")
+            await ctx.send("✅ Cog `gerenciador` recarregado por último com sucesso.")
         except Exception as e:
-            logger.error(f"\n Erro ao recarregar o cog 'gerenciador': {e}. Comando executado por :'{ctx.author}'.\n")
+            logger.error(f"Erro ao recarregar o cog 'gerenciador': {e}. Comando executado por :'{ctx.author}'.\n")
             await ctx.send(f"❌ Erro ao recarregar o cog `gerenciador`:\n```py\n{e}\n```")
 # ---------------------------------------
 # --- REINICIA O BOT ---
@@ -138,11 +134,11 @@ class Gerenciador(commands.Cog):
     @commands.check(check_dev_permissions)
     async def restart_bot(self, ctx):
         try:
-            logger.warning(f"\n Reiniciando o bot por comando de '{ctx.author}'\n")
+            logger.warning(f"Reiniciando o bot por comando de '{ctx.author}'\n")
             await ctx.send("♻️ Reiniciando o bot...")
             os.execv(sys.executable, ['python'] + sys.argv)
         except Exception as e:
-            logger.error(f"\n Erro ao reiniciar o bot: {e}. Comando executado por :'{ctx.author}'.\n")
+            logger.error(f"Erro ao reiniciar o bot: {e}. Comando executado por :'{ctx.author}'.\n")
             await ctx.send(f"❌ Erro ao reiniciar o bot:\n```py\n{e}\n```")
 # ---------------------------------------
 # --- SETUP COG ---
