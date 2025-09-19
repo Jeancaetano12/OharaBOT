@@ -20,7 +20,7 @@ class Diagnostico(commands.Cog):
     async def verificar_permissoes(self, ctx):
         bot_membro = ctx.guild.me
         if bot_membro.guild_permissions.manage_roles:
-            logger.debug(f"O bot tem permissão para Gerenciar Cargos no servidor '{ctx.guild.name}'.")
+            logger.info(f"O bot tem permissão para Gerenciar Cargos no servidor '{ctx.guild.name}'.")
         else:
             logger.critical(f"O bot NÃO tem permissão para Gerenciar Cargos no servidor '{ctx.guild.name}'.")
 
