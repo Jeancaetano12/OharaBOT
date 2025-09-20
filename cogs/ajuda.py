@@ -1,3 +1,5 @@
+# cgos/ajuda.py
+
 import discord
 from discord.ext import commands
 import logging
@@ -16,7 +18,8 @@ class Ajuda(commands.Cog):
             description=(
                 f"Olá {ctx.author.mention}! Estou em desenvolvimento e por enquanto posso te ajudar com essas informações:\n\n"
                 f"• **Silksong** → Use `$silksong` para ver as estatísticas da jornada do <@{SRSILKSONG_ID}> no Hollow Knight Silksong.\n"
-                f"• **Música** → Use `$musica` para ver os comandos relacionados à minha funcionalidade de tocar músicas.\n\n"
+                f"• **Música** → Use `$musica` para ver os comandos relacionados à minha funcionalidade de tocar músicas.\n"
+                f"• **Dev** → Use `$dev` para ver comandos voltados ao desenvolvimento.\n\n"
                 f"Se a informação que você procura não está aqui, clique no botão abaixo para acessar a minha documentação!"
             ),
             color=discord.Color.dark_purple()  
@@ -90,6 +93,54 @@ class AjudaMusica(commands.Cog):
         embed.set_footer(text="Dica: Você pode usar links do YouTube ou apenas digitar o nome da música!")
         await ctx.send(embed=embed)
         logger.info(f"Comando de ajuda de música solicitado por '{ctx.author}' no canal '{ctx.channel}' do servidor '🚩 {ctx.guild}'")
+
+class AjudaGerenciador(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+#--- Comando ---
+    @commands.command(name="dev")
+    async def gerenciador_help(self, ctx):
+        embed = discord.Embed(
+            title="🛠️ Comandos de Gerenciamento",
+            description=(
+                "Estes comandos são **restritos a desenvolvedores** e devem ser usados "
+                f"no canal de controle configurado.\n\n"
+                "Eles servem para carregar, descarregar, recarregar cogs e reiniciar o bot."
+            ),
+            color=discord.Color.orange()
+        )
+
+        embed.add_field(
+            name="📥 `$load <nome>`",
+            value="Carrega um cog específico. Exemplo: `$load musica`",
+            inline=False
+        )
+        embed.add_field(
+            name="📤 `$unload <nome>`",
+            value="Descarrega um cog específico. Útil para testes.",
+            inline=False
+        )
+        embed.add_field(
+            name="♻️ `$reload <nome>`",
+            value="Recarrega um cog específico sem precisar reiniciar o bot.",
+            inline=False
+        )
+        embed.add_field(
+            name="🔄 `$hard_reload`",
+            value="Recarrega **todos os cogs** (exceto o gerenciador, que é recarregado por último).",
+            inline=False
+        )
+        embed.add_field(
+            name="🚀 `$restart`",
+            value="Reinicia o bot completamente. Útil para aplicar mudanças maiores.",
+            inline=False
+        )
+
+        embed.set_footer(text="Atenção: Use esses comandos apenas se você for autorizado!")
+        await ctx.send(embed=embed)
+        logger.info(f"Comando de ajuda de gerenciamento solicitado por '{ctx.author}' no canal '{ctx.channel}' do servidor '🚩 {ctx.guild}'")
+
 async def setup(bot):
     await bot.add_cog(Ajuda(bot))
     await bot.add_cog(AjudaMusica(bot))
+    await bot.add_cog(AjudaGerenciador(bot))

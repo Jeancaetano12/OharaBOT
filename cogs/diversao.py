@@ -1,4 +1,5 @@
 # cogs/diversao.py
+
 from discord.ext import commands
 import json
 import os
