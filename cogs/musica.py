@@ -122,7 +122,7 @@ class Musica(commands.Cog):
             return
         
         embed = discord.Embed(
-            title="Fila de Músicas 🔊",
+            title="🔊 Fila de Músicas",
             color=discord.Color.blue()
         )
         if self.tocando_agora:
@@ -136,7 +136,7 @@ class Musica(commands.Cog):
                 lista_musicas += f"**{i + 1}.** {musica['title']}\n"
             embed.add_field(name="Próximas na fila:", value=lista_musicas, inline=False)
         await ctx.send(embed=embed)
-        logger.info(f"Fila de músicas exibida para '{ctx.author}'")
+        logger.info(f"Fila de músicas exibida para '{ctx.author}' no canal'{ctx.channel}' do servidor '🚩 {ctx.guild}'")
 #---------------------------------
 #--- LIMPA A FILA DE MUSICAS ---
     @commands.command(name="limpar_fila", help="Limpa a fila de músicas.")
@@ -197,8 +197,8 @@ class Musica(commands.Cog):
 
         if self.voice_client.is_playing() or self.voice_client.is_paused():
             self.fila_musicas.append({'title': titulo, 'url': url, 'duration': duracao_formatada})
-            await mensagem_feedback.edit(content=f"🔊 `{titulo}` foi adicionada à fila.\n"
-                                                f"Use `$fila` para ver a lista de reprodução.")
+            await mensagem_feedback.edit(content=f"🔊 `{titulo}` foi adicionada à fila.\n\n"
+                                                f"❓ Use `$fila` para ver a lista de reprodução.")
             logger.info(f"Música '{titulo}' adicionada à fila por '{ctx.author}'")
         else:
             if self.disconnect_task:

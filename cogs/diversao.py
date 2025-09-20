@@ -5,6 +5,8 @@ import os
 import logging
 
 logger = logging.getLogger(__name__)
+
+SRSILKSONG_ID = 402082403268427778
 # Todo Cog é uma classe que herda de commands.Cog
 class Diversao(commands.Cog):
     def __init__(self, bot):
@@ -43,38 +45,19 @@ class Diversao(commands.Cog):
     @commands.command(name="silksong")
     async def _silksong(self, ctx, acao: str = None):
         dados = self._carregar_dados()
-        print(f"Dados carregados: {dados}")
     
-        if acao and acao.lower() == "+m":
-            dados["silksong_deaths"] += 1
-            self._salvar_dados(dados)
-            contagem_bosses = dados["silksong_deaths"]
-            await ctx.send(f"Vish, parece que o Sr. Silksong pereceu mais uma vez... \n"
-                           f"Ele morreu um total de: **{contagem_bosses}** 💀\n "
-                           f"Vai me avisando kkjkkjk")
-            logger.info(f"Contagem de mortes atualizada: {contagem_bosses}")
-        elif acao and acao.lower() == "+b":
-            dados["silksong_bosses"] += 1
-            self._salvar_dados(dados)
-            contagem_bosses = dados["silksong_bosses"]
-            await ctx.send(f"Eita? Parece que o nosso jogador aposentou mais um kkkjkjkjkkj\n"
-                           f"Bosses derrotados: **{contagem_bosses}** 👑\n"
-                           f"Vai me avisando kkjkkjk")
-            logger.info(f"Contagem de bosses atualizada: {contagem_bosses}")
-        else:
-            contagem_mortes = dados["silksong_deaths"]
-            contagem_bosses = dados["silksong_bosses"]
+        contagem_mortes = dados["silksong_deaths"]
+        contagem_bosses = dados["silksong_bosses"]
 
-            mensagem = (
-                        f"Até agora, o Sr. Silksong acumulou:\n"
-                        f"💀 Mortes: **{contagem_mortes}**\n"
-                        f"👑 Bosses Derrotados: **{contagem_bosses}**\n"
-                        f"Provavelmente mais mortes que bosses né? kkkjkjkjk\n"
-                        f"\nUse `$silksong +m` para adicionar uma morte ou `$silksong +b` para adicionar um boss derrotado."
-                    )
-            await ctx.send(mensagem)
-            logger.info(f"Exibindo contagens - Mortes: {contagem_mortes}, Bosses: {contagem_bosses}")
+        mensagem = (
+                    f"Até agora, o <@{SRSILKSONG_ID}> acumulou:\n"
+                    f"💀 Mortes: **{contagem_mortes}**\n"
+                    f"👑 Bosses Derrotados: **{contagem_bosses}**\n"
+                    f"Provavelmente mais mortes que bosses né? kkkjkjkjk\n"
+                    f"\n⚠️ Não é mais possível registrar mortes ou bosses. A jornada do Sr.Silksong acabou!\n"
+                )
+        await ctx.send(mensagem)
+        logger.info(f"Comando silksong solicitado por '{ctx.author}' no canal '{ctx.channel}' do servidor '🚩 {ctx.guild}'")
 
-# Esta função setup é essencial. O bot.py a usará para carregar o Cog.
 async def setup(bot):
     await bot.add_cog(Diversao(bot))
