@@ -5,31 +5,33 @@ from discord.ext import commands
 import os
 import sys
 import logging
+from dotenv import load_dotenv
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 # --- CONFIGURAÇÃO DE SEGURANÇA ---
-ID_CANAL_BOTLOG = 1410316318917394433 # <<< ID do Canal botlog
-ID_CARGO_PERMITIDO = 1410347600602726430 # <<< Somente Devs tem acesso a esse comando
+CARGO_DEV = int(os.getenv("CARGO_DEV"))
+CHAT_LOG = int(os.getenv("CHAT_LOG"))
 # -------------------------------
 
 # --- VERIFICA ONDE FOI FEITO O COMANDO ---
 async def check_dev_permissions(ctx):
     # Verifica o canal
-    if ctx.channel.id != ID_CANAL_BOTLOG:
-        canal_botlog = ctx.guild.get_channel(ID_CANAL_BOTLOG)
-        if canal_botlog:
-            await ctx.send(f"❌ Comando permitido apenas no canal {canal_botlog.mention}.", delete_after=10)
+    if ctx.channel.id != CHAT_LOG:
+        chat_log = ctx.guild.get_channel(CHAT_LOG)
+        if chat_log:
+            await ctx.send(f"❌ Comando permitido apenas no canal {chat_log.mention}.", delete_after=10)
             logger.warning(f"❌ Usuário '{ctx.author}' tentou usar o comando '{ctx.command}' no canal '{ctx.channel}' do servidor '🚩 {ctx.guild}', mas não tem permissão.")
         else:
             await ctx.send("❌ Este comando só pode ser usado em um canal de controle específico.", delete_after=10)
-            logger.error(f"Canal de controle com ID '{ID_CANAL_BOTLOG}' não encontrado no servidor '🚩 {ctx.guild}'.")
+            logger.error(f"<&@{CARGO_DEV}> ❌ Canal de controle com ID '{chat_log.id}' não encontrado no servidor '🚩 {ctx.guild}'.")
         return False
     # Verifica o cargo
-    cargo_dev = ctx.guild.get_role(ID_CARGO_PERMITIDO)
+    cargo_dev = ctx.guild.get_role(CARGO_DEV)
     # Verifica se o cargo existe no servidor
     if cargo_dev is None:
         await ctx.send("❌ O cargo de desenvolvedor não foi encontrado no servidor.", delete_after=10)
-        logger.error(f"Cargo com ID '{ID_CARGO_PERMITIDO}' não encontrado no servidor '🚩 {ctx.guild}'.")
+        logger.error(f"<&@{CARGO_DEV}> ❌ Cargo com ID '{CARGO_DEV}' não encontrado no servidor '🚩 {ctx.guild}'.")
         return False
     # Verifica se o autor tem o cargo
     if cargo_dev not in ctx.author.roles:
@@ -54,7 +56,7 @@ class Gerenciador(commands.Cog):
             logger.info(f"Cog '{cog_name}' carregado por '{ctx.author}'")
             await ctx.send(f"✅ Cog '{cog_name}' foi carregado com sucesso.")
         except Exception as e:
-            logger.error(f"Erro ao carregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}' no servidor '🚩 {ctx.guild}'.\n")
+            logger.error(f"<&@{CARGO_DEV}> ❌ Erro ao carregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}' no servidor '🚩 {ctx.guild}'.\n")
             await ctx.send(f"❌ Erro ao carregar o cog '{cog_name}':\n```py\n{e}\n```")
 # ---------------------------------------
 # --- DESCARREGA UM COG ESPECIFICO ---
@@ -65,7 +67,7 @@ class Gerenciador(commands.Cog):
             await self.bot.unload_extension(f"cogs.{cog_name}")
             await ctx.send(f"⚠️ Cog '{cog_name}' foi descarregado com sucesso.")
         except Exception as e:
-            logger.error(f"Erro ao descarregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}' no servidor '🚩 {ctx.guild}'.\n")
+            logger.error(f"<&@{CARGO_DEV}> ❌ Erro ao descarregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}' no servidor '🚩 {ctx.guild}'.\n")
             await ctx.send(f"❌ Erro ao descarregar o cog '{cog_name}':\n```py\n{e}\n```")
 # ---------------------------------------
 # --- RECARREGA UM COG ESPECIFICO ---
@@ -76,7 +78,7 @@ class Gerenciador(commands.Cog):
             await self.bot.reload_extension(f"cogs.{cog_name}")
             await ctx.send(f"✅ Cog '{cog_name}' foi recarregado com sucesso.")
         except Exception as e:
-            logger.error(f"Erro ao recarregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}' no servidor '🚩 {ctx.guild}'.\n")
+            logger.error(f"<&@{CARGO_DEV}> ❌ Erro ao recarregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}' no servidor '🚩 {ctx.guild}'.\n")
             await ctx.send(f"❌ Erro ao recarregar o cog '{cog_name}':\n```py\n{e}\n```")
 # ---------------------------------------
 # --- RECARREGA TODOS OS COGS ---
@@ -101,7 +103,7 @@ class Gerenciador(commands.Cog):
                     await self.bot.reload_extension(f"cogs.{cog_name}")
                     reloaded_cogs.append(cog_name) # Adiciona ao array de recarregados
                 except Exception as e:
-                    logger.error(f"Erro ao recarregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}' no servidor '🚩 {ctx.guild}'.\n")
+                    logger.error(f"<&@{CARGO_DEV}> ❌ Erro ao recarregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}' no servidor '🚩 {ctx.guild}'.\n")
                     failed_cogs.append(f"`{cog_name}`: `{e}`")
         # Mensagem final
         embed = discord.Embed(
@@ -128,7 +130,7 @@ class Gerenciador(commands.Cog):
             await self.bot.reload_extension("cogs.gerenciador")
             await ctx.send("✅ Cog `gerenciador` recarregado por último com sucesso.")
         except Exception as e:
-            logger.error(f"Erro ao recarregar o cog 'gerenciador': {e}. Comando executado por:'{ctx.author}' no servidor '🚩 {ctx.guild}'.\n")
+            logger.error(f"<&@{CARGO_DEV}> ❌ Erro ao recarregar o cog 'gerenciador': {e}. Comando executado por:'{ctx.author}' no servidor '🚩 {ctx.guild}'.\n")
             await ctx.send(f"❌ Erro ao recarregar o cog `gerenciador`:\n```py\n{e}\n```")
 # ---------------------------------------
 # --- REINICIA O BOT ---
@@ -140,7 +142,7 @@ class Gerenciador(commands.Cog):
             await ctx.send("♻️ Reiniciando o bot...")
             os.execv(sys.executable, ['python'] + sys.argv)
         except Exception as e:
-            logger.error(f"Erro ao reiniciar o bot: {e}. Comando executado por:'{ctx.author}' no servidor '🚩 {ctx.guild}'.\n")
+            logger.error(f"<&@{CARGO_DEV}> ❌ Erro ao reiniciar o bot: {e}. Comando executado por:'{ctx.author}' no servidor '🚩 {ctx.guild}'.\n")
             await ctx.send(f"❌ Erro ao reiniciar o bot:\n```py\n{e}\n```")
 # ---------------------------------------
 # --- SETUP COG ---

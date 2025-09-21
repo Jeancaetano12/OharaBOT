@@ -5,9 +5,15 @@ from discord.ext import commands
 import logging
 import yt_dlp
 import asyncio
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
+# --- CONFIGURAÇÃO DE SEGURANÇA ---
+CARGO_DEV = int(os.getenv("CARGO_DEV"))
+# -------------------------------
 #--- CONFIGURAÇÕES DO YDL E FFMPEG ---
 YDL_OPTIONS = {
     'format': 'bestaudio/best',
@@ -30,7 +36,7 @@ class Musica(commands.Cog):
     #--- TOCA A PROXIMA MUSICA NA FILA ---
     def play_next(self, error=None):
         if error:
-            logger.error(f"Erro ao tocar a música: {error}")
+            logger.error(f"<&@{CARGO_DEV}> ❌ Erro ao tocar a música: {error}")
             return
         if self.fila_musicas:
             proxima_musica = self.fila_musicas.pop(0)
@@ -186,7 +192,7 @@ class Musica(commands.Cog):
                 elif 'entries' in info and len(info['entries']) == 0:
                     raise Exception("Nenhum resultado encontrado.")
             except Exception as e:
-                logger.error(f"Erro ao buscar a música (URL: {is_url}): {e}")
+                logger.error(f"<&@{CARGO_DEV}> ❌ Erro ao buscar a música (URL: {is_url}): {e}")
                 await ctx.send("❌ Não consegui encontrar a música. Tente novamente.", delete_after=10)
                 return
         url = info['url']

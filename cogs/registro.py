@@ -6,6 +6,13 @@ from discord.ui import View, Select
 from discord.utils import get
 import logging
 import traceback
+import os
+from dotenv import load_dotenv
+load_dotenv()
+#--- CONFIGURAÇÃO DE SEGURANÇA ---
+ID_SERVIDOR = int(os.getenv("ID_SERVIDOR"))
+CARGO_DEV = int(os.getenv("CARGO_DEV"))
+# -------------------------------
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +29,7 @@ class Diagnostico(commands.Cog):
         if bot_membro.guild_permissions.manage_roles:
             logger.info(f"O bot tem permissão para Gerenciar Cargos no servidor '{ctx.guild.name}'.")
         else:
-            logger.critical(f"O bot NÃO tem permissão para Gerenciar Cargos no servidor '{ctx.guild.name}'.")
+            logger.critical(f"❌ O bot NÃO tem permissão para Gerenciar Cargos no servidor '{ctx.guild.name}'. <&@{CARGO_DEV}>")
 
 # --- COG PRINCIPAL DE REGISTRO ---
 
@@ -33,9 +40,9 @@ class Registro(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        logger.info(f"❗ Novo membro detectado: {member.name} (ID: {member.id})")
+        logger.info(f"❗ Novo membro detectado: '{member.name}' (ID: {member.id}) no servidor '{member.guild.name}'.")
         if member.bot:
-            logger.info(f"O membro {member.name} é um bot. Ignorando.")
+            logger.info(f"O membro '{member.name}' é um bot. Ignorando.")
             return
         
         mensagem_dm = (
@@ -45,9 +52,9 @@ class Registro(commands.Cog):
         
         try:
             await member.send(mensagem_dm, view=RegistroView())
-            logger.info(f"🔁 DM enviada para {member.name}.")
+            logger.info(f"🔁 DM enviada para '{member.name}'.")
         except discord.Forbidden:
-            logger.warning(f"⚠️ Falha ao enviar DM para {member.name}. As DMs dele(a) podem estar fechadas.")
+            logger.warning(f"⚠️ Falha ao enviar DM para '{member.name}'. As DMs dele(a) podem estar fechadas.")
 
 # --- DEFINIÇÃO DAS CLASSES DE UI ---
 
@@ -105,7 +112,7 @@ class FormularioView(View):
     @discord.ui.button(label="✅ Enviar Respostas", style=discord.ButtonStyle.primary, custom_id="enviar_respostas")
     async def botao_enviar_callback(self, interaction: discord.Interaction, button: discord.Button):
         try:
-            logger.debug(f"Callback 'enviar_respostas' iniciado por {interaction.user.name}")
+            logger.info(f"Callback 'enviar_respostas' iniciado por {interaction.user.name}")
 
             # PASSO 1: Deferir a interação para ganhar tempo
             await interaction.response.defer(ephemeral=True, thinking=True)
@@ -122,17 +129,16 @@ class FormularioView(View):
             await interaction.edit_original_response(view=self)
 
             # PASSO 4: Obter o servidor (guild) e o membro
-            ID_DO_SERVIDOR = 842832283614052421 # <<< VERIFIQUE SE SEU ID DO SERVIDOR ESTÁ CORRETO AQUI
-            guild = interaction.client.get_guild(ID_DO_SERVIDOR)
+            guild = interaction.client.get_guild(ID_SERVIDOR)
             if not guild:
-                logger.error(f"\n❌ Guild com ID {ID_DO_SERVIDOR} não encontrada.\n")
+                logger.error(f"\n<&@{CARGO_DEV}>❌ Guild com ID {ID_SERVIDOR} não encontrada.\n")
                 await interaction.followup.send("Erro interno: Não encontrei meu servidor. Avise um ADM!", ephemeral=True)
                 return
 
             logger.info(f"Buscando o membro com ID: {interaction.user.id} no servidor '{guild.name}'")
             membro_no_servidor = await guild.fetch_member(interaction.user.id) # <<< Guarda o usuario nessa variavel
             if not membro_no_servidor:
-                logger.error(f"\n❌ Membro com ID {interaction.user.id} não encontrado no servidor.\n")
+                logger.error(f"\n<&@{CARGO_DEV}>❌ Membro com ID {interaction.user.id} não encontrado no servidor.\n")
                 await interaction.followup.send("Erro interno: Não te encontrei no servidor. Avise um ADM!", ephemeral=True)
                 return
             
@@ -150,7 +156,7 @@ class FormularioView(View):
 
             # PASSO 7: Verificar se todos os cargos foram encontrados
             if not all([cargo_idade, cargo_genero, cargo_verificado]):
-                logger.critical("\nFalha na verificação 'not all'. Um ou mais cargos são 'None'.\n")
+                logger.critical(f"\n<&@{CARGO_DEV}> Falha na verificação 'not all'. Um ou mais cargos são 'None'.\n")
                 await interaction.followup.send("Ops! Um ou mais cargos não foram encontrados no servidor. Avise um administrador!", ephemeral=True)
                 return
 
@@ -160,12 +166,12 @@ class FormularioView(View):
 
             # PASSO 10: Enviar mensagem de sucesso
             await interaction.followup.send("✅ Tudo certo! Seus cargos foram atribuídos com sucesso e você deve conseguir ver todo o servidor agora! 🎊", ephemeral=True)
-            logger.info(f"Processo de registro finalizado com sucesso para {membro_no_servidor.name}.\n"
+            logger.info(f"Processo de registro finalizado com sucesso para '{membro_no_servidor.name}'.\n"
                         f"ID: {membro_no_servidor.id}")
 
         except Exception as e:
             # Este bloco captura qualquer erro inesperado que possa acontecer
-            logger.error(f"\n❌ Erro inesperado no callback 'enviar_respostas' para {interaction.user.name}: {e}")
+            logger.error(f"\n❌ <&@{CARGO_DEV}> Erro inesperado no callback 'enviar_respostas' para '{interaction.user.name}': {e}")
             logger.error(traceback.format_exc()) # Imprime o traceback completo no log
             await interaction.followup.send("Ocorreu um erro crítico ao processar sua solicitação. A equipe de ADMs já foi notificada!", ephemeral=True)
 
