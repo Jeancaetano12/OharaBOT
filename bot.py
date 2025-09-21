@@ -1,32 +1,29 @@
 import discord
-from discord.ext import commands # Importa a extensão de comandos
-import os  # Importe a biblioteca os
-from dotenv import load_dotenv  # Importe a função load_dotenv
+from discord.ext import commands 
+import os  
+from dotenv import load_dotenv  
 import asyncio
 import logging
 from utils.log_handler import DiscordLogHandler
 
 logging.basicConfig(
-    level=logging.INFO, # Define o nível de log para ser exibido
+    level=logging.INFO, 
     format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
-# Configura o logger para o handler
+
 log_root = logging.getLogger()
 
-load_dotenv()  # Carrega as variáveis de ambiente do arquivo .env
-TOKEN = os.getenv("DISCORD_TOKEN")  # Obtém o token do bot
-
+load_dotenv() 
+TOKEN = os.getenv("DISCORD_TOKEN") 
+CHAT_LOG = int(os.getenv("CHAT_LOG"))
 # As "intents" definem quais eventos seu bot irá escutar
 intents = discord.Intents.default()
-intents.message_content = True  # Permissão para ler o conteúdo das mensagens
-intents.members = True # Adicionamos a intent de membros para o porteiro
+intents.message_content = True  
+intents.members = True 
 
-# Cria o objeto do bot
+
 bot = commands.Bot(command_prefix='$', intents=intents)
-
-# --- CONFIGURAÇÃO DE LOGS ---
-ID_CANAL_BOTLOG = 1410316318917394433 # <<< ID do Canal botlog
 
 # Evento chamado quando o bot está online e pronto
 @bot.event
@@ -35,9 +32,9 @@ async def on_ready():
     print('LEIA O README ANTES DE USAR O BOT!')
     print('=================================\n')
     if not any(isinstance(h, DiscordLogHandler) for h in log_root.handlers):
-        discord_handler = DiscordLogHandler(bot, ID_CANAL_BOTLOG)
+        discord_handler = DiscordLogHandler(bot, CHAT_LOG)
 
-        discord_handler.setLevel(logging.DEBUG) # Define o nível de log para DEBUG
+        discord_handler.setLevel(logging.DEBUG)
         formatter = logging.Formatter("%(asctime)s [%(levelname)s] [%(name)s] %(message)s", "%Y-%m-%d %H:%M:%S")
         discord_handler.setFormatter(formatter)
 
@@ -62,9 +59,8 @@ async def main():
         await load_cogs()
         await bot.start(TOKEN)
 
-# Inicia o bot
+
 if __name__ == "__main__":
     asyncio.run(main())
 
-# Chave de acesso guardada.
 bot.run(TOKEN)
