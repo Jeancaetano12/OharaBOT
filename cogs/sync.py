@@ -23,8 +23,8 @@ class Sync(commands.Cog):
             "X-API-KEY": self.back_key
         }
 
-    @commands.command(name='sync')
-    async def sync_members(self, ctx):
+    @commands.command(name='sync all')
+    async def sync_all_members(self, ctx):
         if not await check_dev_permissions(ctx):
             return
         
@@ -35,7 +35,7 @@ class Sync(commands.Cog):
 
         members_to_sync = ctx.guild.members
         batch = []
-        batch_size = 50 # Enviando lotes de 10
+        batch_size = 50 # Enviando lotes de 50
         total_synced = 0
         total_failed = 0
 
@@ -62,7 +62,7 @@ class Sync(commands.Cog):
                                 await feedback_message.edit(content=f"⚙️ **Sincronizando...** `{total_synced} de {total_members}` membros processados.")
                             else:
                                 total_failed += len(batch)
-                                logger.error(f"❌ Erro ao enviar lote: Status {response.status} - {await response.text()}")
+                                logger.warning(f"❌ Erro ao enviar lote: Status {response.status} - {await response.text()}")
                         batch = [] # Limpa o lote para o proximo ciclo
                     except aiohttp.ClientConnectorError:
                         return await ctx.send("❌ **Erro de Conexão:** Não foi possível conectar ao backend. A sincronização foi cancelada.")
@@ -73,7 +73,7 @@ class Sync(commands.Cog):
                             total_synced += len(batch)
                         else:
                             total_failed += len(batch)
-                            logger.error(f"❌ Erro ao enviar último lote: Status {response.status} - {await response.text()}")
+                            logger.warning(f"❌ Erro ao enviar último lote: Status {response.status} - {await response.text()}")
                 except aiohttp.ClientConnectionError:
                     return await ctx.send("❌ **Erro de Conexão:** Falha ao enviar o último lote.")
                 
