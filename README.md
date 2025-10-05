@@ -22,4 +22,4 @@ Cntl + Shift + V pra ler melhor
 - Seja coerente com seus commits, siga leia e siga os exemplos desse [repositório](https://gist.github.com/Jeancaetano12/94915babd78980325bcda3f97d428211)
 - Qualquer merge com a **main** também tem que ser discutido antes pra evitar dor de cabeça.
 
-## Qualquer erro chama alguem no servido :)
+## Qualquer erro chama alguem no servidor :)

@@ -17,20 +17,6 @@ CARGO_DEV = int(os.getenv("CARGO_DEV"))
 
 logger = logging.getLogger(__name__)
 
-# --- COG DE DIAGNÓSTICO DE PERMISSÕES ---
-class Diagnostico(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.command(name="verificar_permissoes")
-    @commands.has_permissions(administrator=True)
-    async def verificar_permissoes(self, ctx):
-        bot_membro = ctx.guild.me
-        if bot_membro.guild_permissions.manage_roles:
-            logger.info(f"O bot tem permissão para Gerenciar Cargos no servidor '{ctx.guild.name}'.")
-        else:
-            logger.critical(f"❌ O bot NÃO tem permissão para Gerenciar Cargos no servidor '{ctx.guild.name}'. <&@{CARGO_DEV}>")
-
 # --- COG PRINCIPAL DE REGISTRO ---
 class Registro(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -39,7 +25,6 @@ class Registro(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        logger.info(f"❗ Novo membro detectado: '{member.name}' (ID: {member.id}) no servidor '{member.guild.name}'.")
         if member.bot:
             logger.info(f"O membro '{member.name}' é um bot. Ignorando.")
             return
@@ -47,7 +32,7 @@ class Registro(commands.Cog):
         mensagem_dm = (
             f"Oii👋 {member.mention}, Seja Bem-vindo(a) ao **{member.guild.name}**!\n\n"
             "Eu sou o 🤖 Robozinho amigo dos ADMs que veio te ajudar a ter acesso completo ao servidor. "
-            "Por favor, inicie seu registro clicando no botão abaixo. ⬇️"
+            "Por favor, nos ajude a te conhecer melhor com o formulario abaixo ⬇️"
         )
 
         try:
@@ -62,10 +47,10 @@ class Registro(commands.Cog):
 class IdadeSelect(Select):
     def __init__(self):
         options = [
-            discord.SelectOption(label="Menor que 18", description="Selecione esta opção se você tiver menos de 18 anos.", value="menor_18"),
-            discord.SelectOption(label="Maior que 18", description="Selecione esta opção se você tiver mais de 18 anos.", value="maior_18")
+            discord.SelectOption(label="Menor de idade 👎", description="Selecione esta opção se você tiver menos de 18 anos.", value="menor_18"),
+            discord.SelectOption(label="Sou adulto 👍", description="Selecione esta opção se você tiver mais de 18 anos.", value="maior_18")
         ]
-        super().__init__(placeholder="Nos conte sua idade...", options=options, custom_id="idade_select")
+        super().__init__(placeholder="🧐 Nos conte sua idade...", options=options, custom_id="idade_select")
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
@@ -74,11 +59,12 @@ class IdadeSelect(Select):
 class GeneroSelect(Select):
     def __init__(self):
         options = [
-            discord.SelectOption(label="Masculino", value="Homem"),
-            discord.SelectOption(label="Feminino", value="Mulher"),
-            discord.SelectOption(label="Outro", value="Não-Binário"),
+            discord.SelectOption(label="Masculino", value="Masculino"),
+            discord.SelectOption(label="Feminino", value="Feminino"),
+            discord.SelectOption(label="Não-Binário", value="Não-Binário"),
+            discord.SelectOption(label="Outro... 🏳️‍🌈", value="🏳️‍🌈"),
         ]
-        super().__init__(placeholder="Como você se identifica?", options=options, custom_id="genero_select")
+        super().__init__(placeholder="🤔 Como você se identifica?", options=options, custom_id="genero_select")
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
@@ -91,7 +77,7 @@ class RegistroView(View):
     @discord.ui.button(label="📝 Iniciar Registro", style=discord.ButtonStyle.success, custom_id="botao_registro")
     async def botao_callback(self, interaction: discord.Interaction, button: discord.Button):
         await interaction.response.edit_message(
-            content="Show! Me responde essas coisinhas pro pessoal do nosso servidor te conhecer melhor:",
+            content="Show!🥰 Me responde essas coisinhas pro pessoal do nosso servidor te conhecer melhor:",
             view=FormularioView(membro=interaction.user)
         )
 
@@ -172,20 +158,20 @@ class FormularioView(View):
 
             await membro_no_servidor.add_roles(cargo_verificado, cargo_idade, cargo_genero)
 
-            # NOVO: Embed de confirmação bonito
+            # Embed de confirmação bonito
             embed = discord.Embed(
                 title="🎉 Registro Concluído!",
                 description=f"Bem-vindo(a) ao **{guild.name}**, {interaction.user.mention}!",
                 color=discord.Color.green()
             )
-            embed.add_field(name="📅 Faixa Etária", value="🔞 +18" if idade_selecionada == "maior_18" else "🍼 -18", inline=True)
-            embed.add_field(name="🧍 Gênero", value=genero_selecionado, inline=True)
-            embed.set_footer(text="Divirta-se no servidor!")
+            embed.add_field(name="📅 Idade:", value="🔞 +18" if idade_selecionada == "maior_18" else "🍼 -18", inline=True)
+            embed.add_field(name="🧍 Identificação:", value=genero_selecionado, inline=True)
+            embed.set_footer(text="🎉 Fique a vontade para interagir com o pessoal daqui. Divirta-se no servidor! 🥰")
 
             await interaction.followup.send(embed=embed, ephemeral=True)
             logger.info(f"✅ Registro concluído com sucesso para '{interaction.user}' no servidor '{guild.name}'.")
 
-            # NOVO: Remove a view da mensagem original para invalidar qualquer interação futura
+            # Remove a view da mensagem original para invalidar qualquer interação futura
             await interaction.delete_original_response()
 
 
@@ -197,4 +183,3 @@ class FormularioView(View):
 # --- FUNÇÃO SETUP ---
 async def setup(bot):
     await bot.add_cog(Registro(bot))
-    await bot.add_cog(Diagnostico(bot))

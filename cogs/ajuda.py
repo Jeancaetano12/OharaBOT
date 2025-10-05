@@ -7,10 +7,11 @@ from discord.ui import Button, View
 from cogs.diversao import SRSILKSONG_ID
 
 logger = logging.getLogger(__name__)
+# --- AJUDA GERAL ---
 class Ajuda(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-# --- Comando ---
+
     @commands.command(name='ajuda')
     async def help_command(self, ctx):
         embed = discord.Embed(
@@ -32,12 +33,12 @@ class Ajuda(commands.Cog):
         ))
 
         await ctx.send(embed=embed, view=view)
-        logger.info(f"Comando de ajuda solicitado por '{ctx.author}' no canal '{ctx.channel}' do servidor '🚩 {ctx.guild}'")
-
+# -------------------------------------
+# --- COMANDOS DE MUSICAS ---
 class AjudaMusica(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-#--- Comando ---
+
     @commands.command(name='musica')
     async def musica_help(self, ctx):
         embed = discord.Embed(
@@ -93,11 +94,12 @@ class AjudaMusica(commands.Cog):
         embed.set_footer(text="Dica: Você pode usar links do YouTube ou apenas digitar o nome da música!")
         await ctx.send(embed=embed)
         logger.info(f"Comando de ajuda de música solicitado por '{ctx.author}' no canal '{ctx.channel}' do servidor '🚩 {ctx.guild}'")
-
-class AjudaGerenciador(commands.Cog):
+# -------------------------------------
+# --- COMANDOS DE DEV ---
+class AjudaDev(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-#--- Comando ---
+
     @commands.command(name="dev")
     async def gerenciador_help(self, ctx):
         embed = discord.Embed(
@@ -105,7 +107,7 @@ class AjudaGerenciador(commands.Cog):
             description=(
                 "Estes comandos são **restritos a desenvolvedores** e devem ser usados "
                 f"no canal de controle configurado.\n\n"
-                "Eles servem para carregar, descarregar, recarregar cogs e reiniciar o bot."
+                "Eles servem para facilitar e testar coisas durante o desenvolvimento."
             ),
             color=discord.Color.orange()
         )
@@ -131,16 +133,20 @@ class AjudaGerenciador(commands.Cog):
             inline=False
         )
         embed.add_field(
-            name="🚀 `$restart`",
+            name="⚠️ `$restart`",
             value="Reinicia o bot completamente. Útil para aplicar mudanças maiores.",
+            inline=False
+        )
+        embed.add_field(
+            name="⤴️ `$sync_all`",
+            value="Sincroniza os dados de todos os membros com o banco de dados do Servidor",
             inline=False
         )
 
         embed.set_footer(text="Atenção: Use esses comandos apenas se você for autorizado!")
         await ctx.send(embed=embed)
-        logger.info(f"Comando de ajuda de gerenciamento solicitado por '{ctx.author}' no canal '{ctx.channel}' do servidor '🚩 {ctx.guild}'")
-
+# -------------------------------------
 async def setup(bot):
     await bot.add_cog(Ajuda(bot))
     await bot.add_cog(AjudaMusica(bot))
-    await bot.add_cog(AjudaGerenciador(bot))
+    await bot.add_cog(AjudaDev(bot))
