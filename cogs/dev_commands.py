@@ -161,9 +161,9 @@ class Syncronizacao(commands.Cog):
         }
 
     @commands.command(name='sync_all')
+    @commands.check(check_dev_permissions)
     async def sync_all_members(self, ctx):
-        if not await check_dev_permissions(ctx):
-            return
+        
         
         all_members = [m for m in ctx.guild.members if not m.bot]
         total_members = len(all_members)
@@ -216,6 +216,38 @@ class Syncronizacao(commands.Cog):
                     return await ctx.send("❌ **Erro de Conexão:** Falha ao enviar o último lote.")
                 
         await feedback_message.edit(content=f"✅ **Sincronização concluída!**\n- Membros sincronizados: `{total_synced}`\n- Lotes com falha: `{total_failed}`")
+
+    @commands.command(name='sync_member')
+    @commands.check(check_dev_permissions)
+    async def sync_member(self, ctx, membro: discord.Member):
+        """Uso: $sync <@menção do membro> ou $sync <ID do membro>"""
+
+        feedback_message = await ctx.send(f"⚙️ Sincronizando dados para **{membro.display_name}**...", ephemeral=True)
+
+        payload = {
+            "discordId": str(membro.id),
+            "username": membro.name,
+            "nickName": membro.nick,
+            "globalName": membro.global_name,
+            "joinedAt": membro.joined_at.isoformat() if membro.joined_at else None,
+            "avatarUrl": str(membro.display_avatar.url),
+            "roles": [str(role.id) for role in membro.roles if role.name != "@everyone"]
+        }
+
+        try:
+            async with aiohttp.ClientSession(headers=self.headers) as session:
+                async with session.post(self.back_url, data=json.dumps([payload])) as response:
+                    if response.status == 200:
+                        await feedback_message.edit(content=f"✅ Dados de **{membro.display_name}** sincronizados com sucesso!")
+                    else:
+                        await feedback_message.edit(content=f"❌ **Erro ao sincronizar:** O backend retornou o status `{response.status}`.")
+                        logger.error(f"Erro ao sincronizar '{membro.name}'. Status {response.status} - {await response.text()}")
+        
+        except aiohttp.ClientConnectionError as e:
+            await feedback_message.edit(content="❌ **Erro de Conexão:** Não foi possível conectar ao backend.")
+            logger.error(f"Erro de conexão ao tentar sincronizar '{membro.name}': {e}")
+
+
 # ---------------------------------------
 
 # --- SETUP COG ---

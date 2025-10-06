@@ -142,6 +142,11 @@ class AjudaDev(commands.Cog):
             value="Sincroniza os dados de todos os membros com o banco de dados do Servidor",
             inline=False
         )
+        embed.add_field(
+            name="⤴️ `$sync <@menção do membro>`",
+            value="Sincroniza o membro mencionado com o banco de dados",
+            inline=False
+        )
 
         embed.set_footer(text="Atenção: Use esses comandos apenas se você for autorizado!")
         await ctx.send(embed=embed)
