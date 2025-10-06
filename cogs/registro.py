@@ -7,13 +7,18 @@ from discord.utils import get
 import logging
 import traceback
 import os
+import aiohttp
+import json
 from dotenv import load_dotenv
 load_dotenv()
 
 # --- CONFIGURAÇÃO DE SEGURANÇA ---
 ID_SERVIDOR = int(os.getenv("ID_SERVIDOR"))
 CARGO_DEV = int(os.getenv("CARGO_DEV"))
+BACKEND_API_URL = os.getenv("BACKEND_API_URL")
+BOT_API_KEY = os.getenv("BOT_API_KEY")
 # -------------------------------
+
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +162,33 @@ class FormularioView(View):
                 return
 
             await membro_no_servidor.add_roles(cargo_verificado, cargo_idade, cargo_genero)
+            
+            membro_atualizado = await guild.fetch_member(interaction.user.id)
+
+            payload = {
+                "discordId": str(membro_atualizado.id),
+                "username": membro_atualizado.name,
+                "nickName": membro_atualizado.nick,
+                "globalName": membro_atualizado.global_name,
+                "avatarUrl": membro_atualizado.display_avatar.url,
+                "joinedAt": membro_atualizado.joined_at.isoformat() if membro_atualizado.joined_at else None,
+                "roles": [str(role.id) for role in membro_atualizado.roles if role.name != "@everyone"]
+            }
+
+            headers = {
+                "Content-Type": "application/json",
+                "X-API-KEY": BOT_API_KEY
+            }
+
+            async with aiohttp.ClientSession(headers=headers) as session:
+                try:
+                    async with session.post(BACKEND_API_URL, data=json.dumps([payload])) as response:
+                        if response.status == 200:
+                            logger.debug(f"✅ Membro '{membro_atualizado}' sincronizado com sucesso com o backend.")
+                        else:
+                            logger.error(f"❌ Falha na sincronização do membro '{membro_atualizado}': Status {response.status} - {await response.text()}")
+                except aiohttp.ClientConnectorError:
+                    logger.error(f"❌ Erro de conexão ao tentar sincronizar membro '{membro_atualizado}' com o backend.")
 
             # Embed de confirmação bonito
             embed = discord.Embed(
@@ -178,7 +210,7 @@ class FormularioView(View):
         except Exception as e:
             logger.error(f"❌ <&@{CARGO_DEV}> Erro no callback 'enviar_respostas' do membro: {e}")
             logger.error(traceback.format_exc())
-            await interaction.followup.send("❌ Ocorreu um erro crítico ao processar sua solicitação. A equipe de ADMs já foi notificada!", ephemeral=True)
+            await interaction.followup.send("❌ Ocorreu um erro crítico ao processar sua solicitação. A equipe de ADMs já foi notificada!", ephemeral=True)  
 
 # --- FUNÇÃO SETUP ---
 async def setup(bot):

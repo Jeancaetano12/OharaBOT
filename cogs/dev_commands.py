@@ -184,6 +184,7 @@ class Syncronizacao(commands.Cog):
                 payload = {
                     "discordId": str(member.id),
                     "username": member.name,
+                    "nickName": member.nick,
                     "globalName": member.global_name,
                     "avatarUrl": str(member.display_avatar.url),
                     "joinedAt": member.joined_at.isoformat() if member.joined_at else None,
