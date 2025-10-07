@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 class TermoConsentimentoView(View):
     def __init__(self, bot: commands.Bot, autor: discord.Member):
-        super().__init__(timeout=180)
+        super().__init__(timeout=60)
         self.bot = bot
         self.autor = autor
         self.clicado = False #Flag para garantir que só pode ser clicado uma vez
@@ -61,14 +61,16 @@ class TermoConsentimentoView(View):
         await membro.add_roles(cargo_qa)
         logger.info(f"Cargo '{cargo_qa.name}' adicionado ao membro '{membro.name}'.")
 
+        membro_atualizado = await guild.fetch_member(self.autor.id)
+        
         payload = {
-            "discordId": str(membro.id),
-            "username": membro.name,
-            "nickName": membro.nick,
-            "globalName": membro.global_name,
-            "avatarUrl": str(membro.display_avatar.url),
-            "joinedAt": membro.joined_at.isoformat() if membro.joined_at else None,
-            "roles": [str(role.id) for role in membro.roles if role.name != "@everyone"]
+            "discordId": str(membro_atualizado.id),
+            "username": membro_atualizado.name,
+            "nickName": membro_atualizado.nick,
+            "globalName": membro_atualizado.global_name,
+            "avatarUrl": str(membro_atualizado.display_avatar.url),
+            "joinedAt": membro_atualizado.joined_at.isoformat() if membro_atualizado.joined_at else None,
+            "roles": [str(role.id) for role in membro_atualizado.roles if role.name != "@everyone"]
         }
         headers = {"Content-Type": "application/json", "X-API-KEY": BOT_API_KEY}
 
@@ -118,19 +120,60 @@ class SolicitarQA(commands.Cog):
                 "precisamos da sua permissão para coletar e armazenar algumas das suas informações do Discord, "
                 "como seu ID, nome de usuário, apelido, cargos e futuramente **email**.\n\n"
                 "Esses dados serão enviados e armazenados em nosso banco de dados **propietario** para fins academicos,"
-                "gerenciamento e identificação dentro da nossa comunidade em desenvolvimento. Somemte as pessoas com o cargo @Dev "
+                "gerenciamento e identificação dentro da nossa comunidade em desenvolvimento. Somemte as pessoas com o cargo **@Dev** "
                 "terão acesso a esses dados 😉. \n\n"
-                "**Ao clicar em 'Aceito ✅', você concorda com a coleta e armazenamento desses dados.**"
+                "**Ao clicar em 'Aceito ✅', você concorda com a coleta e armazenamento desses dados, recebe acesso aos bastidores de todas as novidades e a possibilidade de enviar sugestões**"
             ),
             color=discord.Color.blue()
         )
-        embed.set_footer(text="Se você recusar, nenhuma ação será tomada. Esta solicitação expira em 3 minutos.") 
+        embed.set_footer(text="Se você recusar, nenhuma ação será tomada. Esta solicitação expira em **1 minuto.**") 
 
         await ctx.send(embed=embed, view=TermoConsentimentoView(self.bot, ctx.author), ephemeral=True,
                        delete_after=180)
 
         await ctx.message.delete()
+    
+class SolicitarAtt(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+        self.back_url = os.getenv("BACKEND_API_URL")
+        self.back_key = os.getenv("BOT_API_KEY")
+        self.headers = {
+            "Content-Type": "application/json",
+            "X-API-KEY": self.back_key
+        }
+
+    @commands.command(name="sync_me")
+    async def solicitar_att(self, ctx):
+        autor = ctx.author
+
+        feedback_message = await ctx.send(f"⚙️ **Sincronizando** seu perfil com a base de dados", delete_after= 10)
+        
+        payload = {
+            "discordId": str(autor.id),
+            "username": autor.name,
+            "nickName": autor.nick,
+            "globalName": autor.global_name,
+            "joinedAt": autor.joined_at.isoformat() if autor.joined_at else None,
+            "avatarUrl": str(autor.display_avatar.url),
+            "roles": [str(role.id) for role in autor.roles if role.name != "@everyone"]
+        }
+
+        try:
+            async with aiohttp.ClientSession(headers=self.headers) as session:
+                async with session.post(self.back_url, data=json.dumps([payload])) as response:
+                    if response.status == 200:
+                        await feedback_message.edit(content=f"✅ '{ctx.author.mention}' foi sincronizado com **sucesso**.", delete_after= 10)
+                    else:
+                        await feedback_message.edit(content=f"❌ **Erro ao sincronizar seu perfil:** Problema interno.", delete_after= 10)
+                        logger.error(f"Erro ao sincronizar '{autor.name}'. Status {response.status} - {await response.text()}")
+        except aiohttp.ClientConnectionError as e:
+            await feedback_message.edit(content="❌ **Erro de Conexão:** Não foi possível conectar ao backend.", delete_after= 10)
+            logger.error(f"Erro de conexão ao tentar sincronizar '{autor.name}': {e}")
+
+        await ctx.message.delete()
 
 async def setup(bot):
     await bot.add_cog(SolicitarQA(bot))
+    await bot.add_cog(SolicitarAtt(bot))
         

@@ -20,7 +20,8 @@ class Ajuda(commands.Cog):
                 f"Olá {ctx.author.mention}! Estou em desenvolvimento e por enquanto posso te ajudar com essas informações:\n\n"
                 f"• **Silksong** → Use `$silksong` para ver as estatísticas da jornada do <@{SRSILKSONG_ID}> no Hollow Knight Silksong.\n"
                 f"• **Música** → Use `$musica` para ver os comandos relacionados à minha funcionalidade de tocar músicas.\n"
-                f"• **Dev** → Use `$dev` para ver comandos voltados ao desenvolvimento.\n\n"
+                f"• **Dev** → Use `$dev` para ver comandos voltados ao desenvolvimento.\n"
+                f"• **Sync** → Use `$sync_me` para atualizar seu perfil na base de dados do servidor.\n\n"
                 f"Se a informação que você procura não está aqui, clique no botão abaixo para acessar a minha documentação!"
             ),
             color=discord.Color.dark_purple()  

@@ -240,7 +240,7 @@ class Syncronizacao(commands.Cog):
                     if response.status == 200:
                         await feedback_message.edit(content=f"✅ Dados de **{membro.display_name}** sincronizados com sucesso!")
                     else:
-                        await feedback_message.edit(content=f"❌ **Erro ao sincronizar:** O backend retornou o status `{response.status}`.")
+                        await feedback_message.edit(content=f"❌ **Erro ao sincronizar:** Problema interno.")
                         logger.error(f"Erro ao sincronizar '{membro.name}'. Status {response.status} - {await response.text()}")
         
         except aiohttp.ClientConnectionError as e:
