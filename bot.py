@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv  
 import asyncio
 import logging
+import json
 from utils.log_handler import DiscordLogHandler
 
 logging.basicConfig(
@@ -43,16 +44,20 @@ async def on_ready():
                                                   "OharaBOT pronto para uso!")
 
 async def load_cogs():
-    # Carrega todos os Cogs da pasta cogs
-    for filename in os.listdir('./cogs'):
-        if filename.endswith('.py'):
-            #remove o .py do nome do arquivo
-            cog_name = f'cogs.{filename[:-3]}'
+    # Verifica e carrega os cogs ativados
+    with open("cogs_status.json", "r") as f:
+        status_data = json.load(f)
+
+    for cog_name, data in status_data.items():
+        if data["status"] == "ativo":
             try:
-                await bot.load_extension(cog_name)
-                print(f'Cog {cog_name} carregado com sucesso.')
+                await bot.load_extension(f"cogs.{cog_name}")
+                logging.getLogger("bot.py").info(f"Cog '{cog_name}' carregado (status: ativo).")
             except Exception as e:
-                print(f'Falha em carregar o cog {cog_name}: {e}')
+                logging.getLogger("bot.py").error(f"Falha ao carregar o cog '{cog_name}': {e}")
+        else:
+            logging.getLogger("bot.py").warning(f"Cog '{cog_name}' não carregado (status: inativo).")
+    
 
 async def main():
     async with bot:

@@ -9,6 +9,7 @@ from cogs.diversao import SRSILKSONG_ID
 logger = logging.getLogger(__name__)
 # --- AJUDA GERAL ---
 class Ajuda(commands.Cog):
+    """Guia geral"""
     def __init__(self, bot):
         self.bot = bot
 
@@ -37,6 +38,7 @@ class Ajuda(commands.Cog):
 # -------------------------------------
 # --- COMANDOS DE MUSICAS ---
 class AjudaMusica(commands.Cog):
+    """Guia para comandos de musica"""
     def __init__(self, bot):
         self.bot = bot
 
@@ -98,6 +100,7 @@ class AjudaMusica(commands.Cog):
 # -------------------------------------
 # --- COMANDOS DE DEV ---
 class AjudaDev(commands.Cog):
+    """Guia para comandos de desenvolvimento"""
     def __init__(self, bot):
         self.bot = bot
 

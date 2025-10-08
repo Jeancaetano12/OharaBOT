@@ -1,0 +1,30 @@
+{
+    "ajuda": {
+        "status": "ativo",
+        "motivo": null
+    },
+    "musica": {
+        "status": "ativo",
+        "motivo": null
+    },
+    "diversao": {
+        "status": "inativo",
+        "motivo": "Nenhuma grande funcionalidade adicionada ainda"
+    },
+    "IA": {
+        "status": "ativo",
+        "motivo": null
+    },
+    "membros_request": {
+        "status": "ativo",
+        "motivo": null
+    },
+    "registro": {
+        "status": "ativo",
+        "motivo": null
+    },
+    "dev_commands": {
+        "status": "ativo",
+        "motivo": null
+    }
+}

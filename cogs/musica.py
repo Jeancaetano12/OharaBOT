@@ -24,6 +24,7 @@ FFMPEG_OPTIONS = {
 
 # --- CLASSE DA COG ---
 class Musica(commands.Cog):
+    """Funcionalidade de tocar música"""
     def __init__(self, bot):
         self.bot = bot
         self.filas = {}
@@ -33,7 +34,6 @@ class Musica(commands.Cog):
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
-        """Monitora o estado de voz para autodesconexão."""
         # Verifica se quem mudou de estado foi o próprio bot
         if member.id == self.bot.user.id and before.channel is not None and after.channel is None:
             guild_id = member.guild.id
@@ -48,7 +48,6 @@ class Musica(commands.Cog):
                 self.tocando_agora.pop(guild_id, None)
 
     def get_audio_url(self, info: dict):
-        """Função auxiliar para extrair a URL de áudio de forma mais confiável."""
         if 'url' in info:
             return info['url']
         for fmt in reversed(info.get('formats', [])):
@@ -57,7 +56,6 @@ class Musica(commands.Cog):
         return None
 
     async def play_next(self, ctx):
-        """Função assíncrona para tocar a próxima música da fila."""
         guild_id = ctx.guild.id
         voice_client = self.voice_clients.get(guild_id)
 

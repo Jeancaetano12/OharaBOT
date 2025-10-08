@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 # --- COG PRINCIPAL DE REGISTRO ---
 class Registro(commands.Cog):
+    """Sistema de registro e verificação para novos membros."""
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.bot.add_view(RegistroView())

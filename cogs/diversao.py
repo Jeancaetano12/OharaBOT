@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 SRSILKSONG_ID = 402082403268427778
 # Todo Cog é uma classe que herda de commands.Cog
 class Diversao(commands.Cog):
+    """Comandos pra frescar"""
     def __init__(self, bot):
         self.bot = bot
         self.caminho_arquivo = 'contagem.json'  # Caminho para o arquivo JSON

@@ -21,6 +21,9 @@ CARGO_QA = int(os.getenv("CARGO_QA"))
 
 logger = logging.getLogger(__name__)
 
+class Membros_request:
+    """Comandos de utilidade geral para todos os membros."""
+    
 class TermoConsentimentoView(View):
     def __init__(self, bot: commands.Bot, autor: discord.Member):
         super().__init__(timeout=60)
@@ -108,6 +111,7 @@ class TermoConsentimentoView(View):
         await interaction.followup.send("Tudo bem 😓. Seus dados não foram coletados e o cargo não foi adicionado. Se mudar de ideia, use o comando novamente.", ephemeral=True)
 
 class SolicitarQA(commands.Cog):
+    """Inicia o processo para um membro solicitar o cargo de QA."""
     def __init__(self, bot):
         self.bot = bot
 
@@ -134,6 +138,7 @@ class SolicitarQA(commands.Cog):
         await ctx.message.delete()
     
 class SolicitarAtt(commands.Cog):
+    """Comandos para sincronizar os dados de um membro com a base de dados."""
     def __init__(self, bot):
         self.bot = bot
         self.back_url = os.getenv("BACKEND_API_URL")
@@ -173,7 +178,64 @@ class SolicitarAtt(commands.Cog):
 
         await ctx.message.delete()
 
+class Utilidades(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+        self.caminho_arquivo = 'cogs_status.json'
+
+    def _carregar_status(self):
+        try:
+            with open(self.caminho_arquivo, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            logger.error(f"Arquivo '{self.caminho_arquivo}' não encontrado ou corrompido.")
+            return {}
+    
+    @commands.command(name="status")
+    async def cogs_status(self, ctx):
+        embed = discord.Embed(
+            title="⚙️ Status dos Módulos (Cogs)",
+            description="📝 Relatório de todas as minhas funcionalidades",
+            color=discord.Color.dark_purple()
+        )
+
+        status_data = self._carregar_status()
+        if not status_data:
+            await ctx.send("❌ Não foi possível carregar o arquivo de status dos cogs.")
+            return
+        
+        for cog_name, data in status_data.items():
+            is_loaded = f"cogs.{cog_name}" in self.bot.extensions
+            
+            description_text = ""
+            motivo_text = ""
+
+            if is_loaded:
+                status_emoji = "🟢 Ativo"
+                # Tenta pegar a descrição (docstring) do Cog carregado
+                # Assumimos que o nome da classe é o nome do arquivo capitalizado
+                cog_object = self.bot.get_cog(cog_name.capitalize())
+                if cog_object and cog_object.__doc__:
+                    # Pega a primeira linha da docstring
+                    description_text = f"\n*{cog_object.__doc__.strip().splitlines()[0]}*"
+
+            else:
+                status_emoji = "🔴 Inativo"
+                motivo_text = f'\n*Motivo:* {data.get("motivo", "N/A")}' if data.get("motivo") else ""
+
+            # Monta o valor do campo do embed
+            field_value = f"**Estado:** {status_emoji}{description_text}{motivo_text}"
+            
+            embed.add_field(
+                name=cog_name.capitalize(),
+                value=field_value,
+                inline=False
+            )
+            
+        await ctx.send(embed=embed)
+            
 async def setup(bot):
     await bot.add_cog(SolicitarQA(bot))
     await bot.add_cog(SolicitarAtt(bot))
+    await bot.add_cog(Utilidades(bot))
         

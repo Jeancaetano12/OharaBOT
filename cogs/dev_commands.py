@@ -1,4 +1,4 @@
-# cogs/gerenciador.py
+# cogs/dev_commands.py
 
 import discord
 from discord.ext import commands
@@ -48,29 +48,81 @@ async def check_dev_permissions(ctx):
 class Gerenciamento(commands.Cog):
     def __init__ (self, bot: commands.Bot):
         self.bot = bot
+        self.caminho_arquivo = 'cogs_status.json'
+    
+    def _carregar_status(self):
+        with open(self.caminho_arquivo, 'r', encoding='utf-8') as f:
+            logger.info("\nCarregando dados do arquivo cogs_status.json.")
+            return json.load(f)
+        
+    def _salvar_status(self, dados):
+        with open(self.caminho_arquivo, 'w', encoding='utf-8') as f:
+            json.dump(dados, f, indent=4)
+# -----------------------------------
 
 # --- RECARREGA UM COG ESPECIFICO ---
     @commands.command(name="load")
     @commands.check(check_dev_permissions)
     async def load_cog(self, ctx, cog_name: str):
+        cog_name = cog_name.lower()
+
+        status_data = self._carregar_status()
+
+        if cog_name not in status_data:
+            await ctx.send(f"❌ Cog `{cog_name}` não encontrado no arquivo de status.")
+            return
+        
+        if status_data[cog_name]["status"] == "ativo":
+            await ctx.send(f"⚠️ O Cog `{cog_name}` já está ativo.")
+            return
+
         try:
             await self.bot.load_extension(f"cogs.{cog_name}")
-            logger.info(f"Cog '{cog_name}' carregado por '{ctx.author}'")
-            await ctx.send(f"✅ Cog '{cog_name}' foi carregado com sucesso.")
+
+            
+            status_data[cog_name]["status"] = "ativo"
+            status_data[cog_name]["motivo"] = None 
+            self._salvar_status(status_data)
+
+            await ctx.send(f"🟢 Cog `{cog_name}` foi ativado com sucesso!")
         except Exception as e:
-            logger.error(f"<&@{CARGO_DEV}> ❌ Erro ao carregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}' no servidor '🚩 {ctx.guild}'.\n")
-            await ctx.send(f"❌ Erro ao carregar o cog '{cog_name}':\n```py\n{e}\n```")
+            await ctx.send(f"❌ Erro ao carregar o cog `{cog_name}`:\n```py\n{e}\n```")
 # ---------------------------------------
 # --- DESCARREGA UM COG ESPECIFICO ---
     @commands.command(name="unload")
     @commands.check(check_dev_permissions)
-    async def unload_cog(self, ctx, cog_name: str):
+    async def unload_cog(self, ctx, cog_name: str, *, motivo: str = None):
+        cog_name = cog_name.lower()
+
+        if cog_name == 'dev_commands':
+            await ctx.send("❌ Por segurança, você não pode desativar este Cog")
+            return
+        
+        if not motivo:
+            await ctx.send("❌ Você precisa fornecer um motivo para desativar um Cog.")
+            return
+        
+        status_data = self._carregar_status()
+
+        if cog_name not in status_data:
+            await ctx.send(f"❌ Cog `{cog_name}` não encontrado no arquivo de status.")
+            return
+        
+        if status_data[cog_name]["status"] == "inativo":
+            await ctx.send(f"⚠️ O Cog `{cog_name}` já está desativado.")
+            return
+            
         try:
             await self.bot.unload_extension(f"cogs.{cog_name}")
-            await ctx.send(f"⚠️ Cog '{cog_name}' foi descarregado com sucesso.")
+
+            # Atualiza o estado no arquivo JSON
+            status_data[cog_name]["status"] = "inativo"
+            status_data[cog_name]["motivo"] = motivo
+            self._salvar_status(status_data)
+
+            await ctx.send(f"🔴 Cog `{cog_name}` foi desativado com sucesso.\n**Motivo:** {motivo}")
         except Exception as e:
-            logger.error(f"<&@{CARGO_DEV}> ❌ Erro ao descarregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}' no servidor '🚩 {ctx.guild}'.\n")
-            await ctx.send(f"❌ Erro ao descarregar o cog '{cog_name}':\n```py\n{e}\n```")
+            await ctx.send(f"❌ Erro ao descarregar o cog `{cog_name}`:\n```py\n{e}\n```")
 # ---------------------------------------
 # --- RECARREGA UM COG ESPECIFICO ---
     @commands.command(name="reload")
@@ -91,26 +143,24 @@ class Gerenciamento(commands.Cog):
         reloaded_cogs = []
         failed_cogs = []
 
-        cog_gerenciador = self.__class__.__name__ # Nome do cog atual
+        cog_dev_commands = self.__class__.__name__ # Nome do cog atual
         await ctx.send("♻️ Recarregando todos os cogs...")
-        logger.info(f"Recarregando todos os cogs por comando de '{ctx.author}' no servidor '🚩 {ctx.guild}'\n")
 
-        # Recarrega todos os cogs, exceto o gerenciador
+        # Recarrega todos os cogs, exceto o dev_commands
         for filename in os.listdir("./cogs"):
             if filename.endswith(".py"):
                 cog_name = filename[:-3]
-                if cog_name == "gerenciador":
+                if cog_name == "dev_commands":
                     continue  # Pula o cog gerenciador para evitar problemas
                 try:
                     await self.bot.reload_extension(f"cogs.{cog_name}")
                     reloaded_cogs.append(cog_name) # Adiciona ao array de recarregados
                 except Exception as e:
-                    logger.error(f"<&@{CARGO_DEV}> ❌ Erro ao recarregar o cog '{cog_name}': {e}. Comando executado por :'{ctx.author}' no servidor '🚩 {ctx.guild}'.\n")
                     failed_cogs.append(f"`{cog_name}`: `{e}`")
         # Mensagem final
         embed = discord.Embed(
             title="📝 Relatório de Recarregamento das Cogs",
-            description="Recarregando o Cog **gerenciador** por último para evitar falhas.",
+            description="Recarregando o Cog **dev_commands** por último para evitar falhas.",
             color=discord.Color.orange()
         )
 
@@ -129,11 +179,11 @@ class Gerenciamento(commands.Cog):
         
         # Recarrega o cog gerenciador por último
         try:
-            await self.bot.reload_extension("cogs.gerenciador")
-            await ctx.send("✅ Cog `gerenciador` recarregado por último com sucesso.")
+            await self.bot.reload_extension("cogs.dev_commands")
+            await ctx.send("✅ Cog `dev_commands` recarregado por último com sucesso.")
         except Exception as e:
-            logger.error(f"<&@{CARGO_DEV}> ❌ Erro ao recarregar o cog 'gerenciador': {e}. Comando executado por:'{ctx.author}' no servidor '🚩 {ctx.guild}'.\n")
-            await ctx.send(f"❌ Erro ao recarregar o cog `gerenciador`:\n```py\n{e}\n```")
+            logger.error(f"<&@{CARGO_DEV}> ❌ Erro ao recarregar o cog 'dev_commands': {e}. Comando executado por:'{ctx.author}' no servidor '🚩 {ctx.guild}'.\n")
+            await ctx.send(f"❌ Erro ao recarregar o cog `dev_commands`:\n```py\n{e}\n```")
 # ---------------------------------------
 # --- REINICIA O BOT ---
     @commands.command(name="restart")
@@ -246,8 +296,6 @@ class Syncronizacao(commands.Cog):
         except aiohttp.ClientConnectionError as e:
             await feedback_message.edit(content="❌ **Erro de Conexão:** Não foi possível conectar ao backend.")
             logger.error(f"Erro de conexão ao tentar sincronizar '{membro.name}': {e}")
-
-
 # ---------------------------------------
 
 # --- SETUP COG ---
