@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  bot:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    deploy:
+      resources:
+        limits:
+          cpus: '1'        # 1 CPU
+          memory: 1G       # 1 GB de memória
+        reservations:
+          cpus: '0.5'
+          memory: 512M
