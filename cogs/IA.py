@@ -6,7 +6,9 @@ from discord.ext import commands
 import google.generativeai as genai
 from dotenv import load_dotenv
 from gtts import gTTS
+import logging
 
+logger = logging.getLogger(__name__)
 
 # Carrega as variáveis de ambiente
 load_dotenv()

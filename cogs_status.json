@@ -4,8 +4,8 @@
         "motivo": null
     },
     "musica": {
-        "status": "ativo",
-        "motivo": null
+        "status": "inativo",
+        "motivo": "em manutencao"
     },
     "diversao": {
         "status": "inativo",
