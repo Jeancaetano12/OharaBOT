@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for oharabot-dark-glade-6337 on 2025-10-08T20:06:36-03:00
+# fly.toml app configuration file generated for oharabot on 2025-10-09T00:19:06-03:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -7,7 +7,7 @@ app = 'oharabot'
 primary_region = 'gru'
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'Dockerfile'
 
 [http_service]
   internal_port = 8080
