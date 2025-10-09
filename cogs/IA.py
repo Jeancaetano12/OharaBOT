@@ -31,9 +31,10 @@ INSTRUÇÕES DE COMPORTAMENTO ESSENCIAIS:
 class IA(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+#separação entre os dois modelos, pra imagem e texto (o da imagem ainda estou melhorando)
 
         self.text_model = genai.GenerativeModel("models/gemini-2.5-flash")
-        self.image_model = genai.GenerativeModel(model_name="gemini-1.5-pro-latest")
+        self.image_model = genai.GenerativeModel("models/gemini-2.5-pro")
         self.conversations = {} # aqui é aonde é guardado todos os contextos das conversas com a IA, para resetar e apagar tudo, basta mencionar o bot e falar reset
         print("IA PRONTA!")
 
