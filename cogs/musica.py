@@ -170,7 +170,7 @@ class Musica(commands.Cog):
         if not voice_client.is_playing():
             await self.play_next(ctx)
 
-    @commands.command(name="stop", aliases=["parar", "sair"])
+    @commands.command(name="stop", aliases=["parar"])
     async def stop(self, ctx):
         guild_id = ctx.guild.id
         voice_client = self.voice_clients.get(guild_id)
