@@ -11,9 +11,8 @@ import yt_dlp as youtube_dl
 logger = logging.getLogger(__name__)
 
 # --- CONFIGURAÇÕES ---
-YDL_OPTIONS = {
+YDL_BASE = {
     'format': 'bestaudio/best',
-    'noplaylist': True,
     'quiet': True,
     'no_warnings': True,
     'default_search': 'auto',
@@ -24,8 +23,8 @@ YDL_OPTIONS = {
     'skip_unavailable_fragments': True,
     'extractor_args': {
         'youtube': {
-            'player_client': ['android', 'web'],  
-            'skip': ['dash', 'hls'],              
+            'player_client': ['android', 'web'],
+            'skip': ['dash', 'hls'],
         }
     },
     'postprocessors': [{
@@ -34,6 +33,13 @@ YDL_OPTIONS = {
         'preferredquality': '192',
     }],
 }
+
+# sem ser playlist
+YTDL_OPTIONS = {**YDL_BASE, 'noplaylist': True}
+
+# quando for playlist pega isso aqui
+
+YTDL_OPTIONS_PLAYLIST = {**YDL_BASE, 'noplaylist': False, 'extract_flat': 'in_playlist'}
 FFMPEG_OPTIONS = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -nostdin',
     'options': '-vn'
@@ -47,7 +53,7 @@ class Musica(commands.Cog):
         self.filas = {}
         self.tocando_agora = {}
         self.voice_clients = {}
-        self.ydl = yt_dlp.YoutubeDL(YDL_OPTIONS)
+        self.ydl = yt_dlp.YoutubeDL(YDL_BASE)
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
@@ -139,13 +145,14 @@ class Musica(commands.Cog):
             self.filas[guild_id] = []
 
         msg = await ctx.send(f"🔎 Procurando por: `{query}`...")
-        
-        ydl_opts_local = YDL_OPTIONS.copy()
 
+        # criei um IF else pra saber o que fazer quando for playlist ou não
         
         if "list=" in query and ("youtube.com/" in query or "youtu.be/" in query):
-            ydl_opts_local['extract_flat'] = 'in_playlist'
+            ydl_opts_local = YTDL_OPTIONS_PLAYLIST.copy()
             logger.info("Playlist detectada, usando modo de extração rápida.")
+        else:        
+            ydl_opts_local = YTDL_OPTIONS.copy()
 
         try:
             loop = asyncio.get_event_loop()
