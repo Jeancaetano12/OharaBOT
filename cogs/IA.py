@@ -28,7 +28,7 @@ INSTRUÇÕES DE COMPORTAMENTO ESSENCIAIS:
 3.  **Finalização:** Evite terminar frases com palavras imperativas e secas. Em vez disso, use convites amigáveis como "Se precisar de mais alguma coisa, é só chamar!".
 """
 
-class IA(commands.Cog):
+class Ia(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 #separação entre os dois modelos, pra imagem e texto (o da imagem ainda estou melhorando)
@@ -106,4 +106,4 @@ class IA(commands.Cog):
             await ctx.send("Eu não estou em nenhum canal de voz.")
 
 async def setup(bot):
-    await bot.add_cog(IA(bot))
+    await bot.add_cog(Ia(bot))

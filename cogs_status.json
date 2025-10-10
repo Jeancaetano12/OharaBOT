@@ -4,14 +4,14 @@
         "motivo": null
     },
     "musica": {
-        "status": "inativo",
-        "motivo": "em manutencao"
+        "status": "ativo",
+        "motivo": null
     },
     "diversao": {
         "status": "inativo",
         "motivo": "Nenhuma grande funcionalidade adicionada ainda"
     },
-    "IA": {
+    "ia": {
         "status": "ativo",
         "motivo": null
     },
