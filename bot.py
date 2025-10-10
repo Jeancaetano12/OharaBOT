@@ -13,6 +13,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
+    logging.getLogger("bot.py").info("Ping recebido! O bot está sendo mantido ativo.")
     return "OharaBOT ativo!"
 
 def run_webserver():
