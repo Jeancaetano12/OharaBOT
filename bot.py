@@ -6,6 +6,19 @@ import asyncio
 import logging
 import json
 from utils.log_handler import DiscordLogHandler
+from flask import Flask
+import threading
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "OharaBOT ativo!"
+
+def run_webserver():
+    app.run(host='0.0.0.0', port=8080)
+
+threading.Thread(target=run_webserver).start()
 
 logging.basicConfig(
     level=logging.INFO, 
@@ -63,6 +76,8 @@ async def main():
     async with bot:
         await load_cogs()
         await bot.start(TOKEN)
+
+
 
 
 if __name__ == "__main__":
