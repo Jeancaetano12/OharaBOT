@@ -173,7 +173,7 @@ class FormularioView(View):
                 "globalName": membro_atualizado.global_name,
                 "avatarUrl": membro_atualizado.display_avatar.url,
                 "joinedAt": membro_atualizado.joined_at.isoformat() if membro_atualizado.joined_at else None,
-                "roles": [str(role.id) for role in membro_atualizado.roles if role.name != "@everyone"]
+                "roles": [{"id": str(role.id), "name": role.name} for role in membro_atualizado.roles if role.name != "@everyone"]
             }
 
             headers = {

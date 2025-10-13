@@ -238,7 +238,7 @@ class Syncronizacao(commands.Cog):
                     "globalName": member.global_name,
                     "avatarUrl": str(member.display_avatar.url),
                     "joinedAt": member.joined_at.isoformat() if member.joined_at else None,
-                    "roles": [str(role.id) for role in member.roles if role.name != "@everyone"]
+                    "roles": [{"id": str(role.id), "name": role.name} for role in member.roles if role.name != "@everyone"]
                 }
                 batch.append(payload)
 

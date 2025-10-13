@@ -161,7 +161,7 @@ class SolicitarAtt(commands.Cog):
             "globalName": autor.global_name,
             "joinedAt": autor.joined_at.isoformat() if autor.joined_at else None,
             "avatarUrl": str(autor.display_avatar.url),
-            "roles": [str(role.id) for role in autor.roles if role.name != "@everyone"]
+            "roles": [{"id": str(role.id), "name": role.name} for role in autor.roles if role.name != "@everyone"]
         }
 
         try:
