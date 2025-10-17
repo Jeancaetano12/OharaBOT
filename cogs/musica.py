@@ -1,22 +1,32 @@
-# cogs/musica.py
-
 import discord
 from discord.ext import commands
 import logging
 import yt_dlp
 import asyncio
 from functools import partial
-import yt_dlp as youtube_dl
+import spotipy 
+from spotipy.oauth2 import SpotifyClientCredentials 
+import os
+from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 
-# --- CONFIGURAÇÕES ---
-YDL_BASE = {
-    'format': 'bestaudio/best',
+
+SPOTIPY_CLIENT_ID = os.getenv("SPOTIPY_CLIENT_ID")
+SPOTIPY_CLIENT_SECRET = os.getenv("SPOTIPY_CLIENT_SECRET")
+
+
+sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID,
+                                                           client_secret=SPOTIPY_CLIENT_SECRET))
+
+# --- CONFIGURAÇÕES YT-DLP ---
+YTDL_BASE = {
+    'format': 'bestaudio[ext=m4a]/bestaudio/best',
     'quiet': True,
     'no_warnings': True,
     'default_search': 'auto',
     'source_address': '0.0.0.0',
+    'cookiefile': 'cookies.txt',
     'geo_bypass': True,
     'extract_flat': False,
     'force_generic_extractor': False,
@@ -35,28 +45,32 @@ YDL_BASE = {
 }
 
 # sem ser playlist
-YTDL_OPTIONS = {**YDL_BASE, 'noplaylist': True}
+YTDL_OPTIONS = {**YTDL_BASE, 'noplaylist': True}
 
-# quando for playlist pega isso aqui
+# quando for playlist arrocha aqui
+YTDL_OPTIONS_PLAYLIST = {**YTDL_BASE, 'noplaylist': False, 'extract_flat': 'in_playlist'}
 
-YTDL_OPTIONS_PLAYLIST = {**YDL_BASE, 'noplaylist': False, 'extract_flat': 'in_playlist'}
 FFMPEG_OPTIONS = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -nostdin',
-    'options': '-vn'
+    'options': '-vn -user_agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"'
 }
 
-# --- CLASSE DA COG ---
+
 class Musica(commands.Cog):
-    """Funcionalidade de tocar música"""
     def __init__(self, bot):
         self.bot = bot
         self.filas = {}
         self.tocando_agora = {}
         self.voice_clients = {}
-        self.ydl = yt_dlp.YoutubeDL(YDL_BASE)
+        if os.path.exists('cookies.txt'):
+            logger.info("Arquivo de cookies 'cookies.txt' encontrado e carregado para yt-dlp.")
+        else:
+            logger.error("Arquivo de cookies 'cookies.txt' não encontrado. Alguns links podem não funcionar corretamente.")
+        self.ydl = yt_dlp.YoutubeDL(YTDL_OPTIONS)
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
+        """Monitora o estado de voz para autodesconexão."""
         # Verifica se quem mudou de estado foi o próprio bot
         if member.id == self.bot.user.id and before.channel is not None and after.channel is None:
             guild_id = member.guild.id
@@ -71,12 +85,83 @@ class Musica(commands.Cog):
                 self.tocando_agora.pop(guild_id, None)
 
     def get_audio_url(self, info: dict):
-        if 'url' in info:
-            return info['url']
+        """Função auxiliar para extrair a URL de áudio e os cabeçalhos HTTP."""
+        # Prioriza formatos que já vêm com os cabeçalhos, para maior compatibilidade
         for fmt in reversed(info.get('formats', [])):
-            if fmt.get('acodec') and fmt.get('acodec') != 'none' and fmt.get('url'):
-                return fmt.get('url')
+            if fmt.get('acodec') and fmt.get('acodec') != 'none' and fmt.get('url') and fmt.get('http_headers'):
+                return {'url': fmt['url'], 'headers': fmt['http_headers']}
+        
+        # Fallback para o método antigo se não encontrar headers (menos provável com yt-dlp atualizado)
+        if 'url' in info:
+            return {'url': info['url'], 'headers': None}
+            
         return None
+
+    
+    async def processar_spotify_link(self, ctx, spotify_link: str):
+        """
+        Extrai informações de um link do Spotify (música ou playlist)
+        e retorna uma lista de dicionários pra adicionar na fila.
+        """
+        try:
+            
+            if "track" in spotify_link:
+                track_id = spotify_link.split('/')[-1].split('?')[0]
+                track = await asyncio.to_thread(sp.track, track_id)
+                artist_name = track['artists'][0]['name']
+                track_name = track['name']
+                query_youtube = f"{track_name} {artist_name}"
+                return [{'title': f"{track_name} - {artist_name} (Spotify)", 'query': query_youtube}]
+
+           
+            elif "playlist" in spotify_link:
+                playlist_id = spotify_link.split('/')[-1].split('?')[0]
+                
+               
+                results = await asyncio.to_thread(sp.playlist_items, playlist_id)
+                tracks_to_add = []
+                
+                playlist_title = await asyncio.to_thread(lambda: sp.playlist(playlist_id)['name'])
+                await ctx.send(f"🎶 Playlist **{playlist_title}** do Spotify encontrada! Adicionando músicas à fila...")
+
+                for item in results['items']:
+                    track = item['track']
+                    if track: 
+                        artist_name = track['artists'][0]['name']
+                        track_name = track['name']
+                        query_youtube = f"{track_name} {artist_name}"
+                        tracks_to_add.append({'title': f"{track_name} - {artist_name} (Spotify)", 'query': query_youtube})
+                
+                return tracks_to_add
+
+            
+            elif "album" in spotify_link:
+                album_id = spotify_link.split('/')[-1].split('?')[0]
+                album = await asyncio.to_thread(sp.album, album_id)
+                tracks_to_add = []
+                
+                album_title = album['name']
+                artist_name = album['artists'][0]['name']
+                await ctx.send(f"💿 Álbum **{album_title}** de **{artist_name}** do Spotify encontrado! Adicionando músicas à fila...")
+
+                for track in album['tracks']['items']:
+                    if track:
+                        artist_name_track = track['artists'][0]['name']
+                        track_name = track['name']
+                        query_youtube = f"{track_name} {artist_name_track}"
+                        tracks_to_add.append({'title': f"{track_name} - {artist_name_track} (Spotify)", 'query': query_youtube})
+                return tracks_to_add
+
+            return [] 
+
+        except spotipy.exceptions.SpotifyException as e:
+            logger.error(f"Erro na API do Spotify: {e}")
+            await ctx.send(f"❌ Erro ao interagir com o Spotify. Verifique o link e as credenciais.")
+            return []
+        except Exception as e:
+            logger.error(f"Erro inesperado ao processar link do Spotify: {e}")
+            await ctx.send(f"❌ Ocorreu um erro ao processar o link do Spotify. Tente novamente.")
+            return []
 
     async def play_next(self, ctx):
         guild_id = ctx.guild.id
@@ -93,17 +178,34 @@ class Musica(commands.Cog):
             extract_func = partial(self.ydl.extract_info, proximo_item['query'], download=False)
             info = await loop.run_in_executor(None, extract_func)
 
-            audio_url = self.get_audio_url(info)
-            if not audio_url:
+            if 'entries' in info:
+                info = info['entries'][0]
+
+            # <-- MUDANÇA INICIA AQUI -->
+            audio_data = self.get_audio_url(info)
+            if not audio_data or not audio_data.get('url'):
                 await ctx.send(f"❌ Não foi possível obter uma URL de áudio para **{proximo_item['title']}**. Pulando.")
                 self.filas[guild_id].pop(0)
                 return await self.play_next(ctx)
 
+            audio_url = audio_data['url']
+            http_headers = audio_data.get('headers')
+
             self.filas[guild_id].pop(0)
             self.tocando_agora[guild_id] = proximo_item
 
+            # Prepara as opções do FFmpeg com os headers customizados
+            ffmpeg_opts = FFMPEG_OPTIONS.copy()
+            if http_headers:
+                # Formata os headers para a linha de comando do FFmpeg
+                headers_str = "".join([f"{key}: {value}\r\n" for key, value in http_headers.items()])
+                ffmpeg_opts['before_options'] += f' -headers "{headers_str}"'
+                logger.info("Usando cabeçalhos HTTP customizados para o FFmpeg.")
+            # <-- MUDANÇA TERMINA AQUI -->
+
             try:
-                audio_source = discord.FFmpegPCMAudio(audio_url, **FFMPEG_OPTIONS)
+                # Passa as opções customizadas para a chamada
+                audio_source = discord.FFmpegPCMAudio(audio_url, **ffmpeg_opts)
             except Exception as e:
                 logger.error(f"ERRO CRÍTICO ao criar FFmpegPCMAudio: {e}")
                 await ctx.send(f"❌ Erro crítico ao tentar carregar a música com FFmpeg. Veja o console para detalhes.")
@@ -146,14 +248,71 @@ class Musica(commands.Cog):
 
         msg = await ctx.send(f"🔎 Procurando por: `{query}`...")
 
-        # criei um IF else pra saber o que fazer quando for playlist ou não
+       
+        if "spotify.com" in query:
+            # Se for um link do Spotify, entra aqui
+            items_spotify = await self.processar_spotify_link(ctx, query)
+            if not items_spotify:
+                return await msg.edit(content=f"❌ Não foi possível processar o link do Spotify ou nenhum item encontrado.")
+            
+            for item in items_spotify:
+                self.filas[guild_id].append(item)
+
+            
+            if len(items_spotify) == 1:
+                await msg.edit(content=f"✅ Adicionado à fila: **{items_spotify[0]['title']}**")
+            else:
+                 await msg.edit(content=f"✅ Adicionadas **{len(items_spotify)}** músicas à fila!")
+
+        else:
+            
+            ydl_opts_local = YTDL_OPTIONS.copy()
+            if "list=" in query and ("youtube.com/" in query or "youtu.be/" in query):
+                ydl_opts_local = YTDL_OPTIONS_PLAYLIST.copy()
+                logger.info("Playlist detectada, usando modo de extração rápida.")
+            
+            try:
+                loop = asyncio.get_event_loop()
+                with yt_dlp.YoutubeDL(ydl_opts_local) as ydl:
+                    extract_func = partial(ydl.extract_info, query, download=False)
+                    info = await loop.run_in_executor(None, extract_func)
+            except Exception as e:
+                logger.error(f"Erro ao buscar com yt-dlp: {e}")
+                return await msg.edit(content=f"❌ Erro ao buscar: Tente novamente ou use outro link.")
+
+            if 'entries' in info:
+                playlist_title = info.get('title', 'Playlist desconhecida')
+                await msg.edit(content=f"🎶 Playlist **{playlist_title}** encontrada! Adicionando músicas à fila...")
+                for entry in info['entries']:
+                    if entry:
+                        self.filas[guild_id].append({
+                            'title': entry.get('title', 'Desconhecido'),
+                            'query': entry.get('url', entry.get('webpage_url'))
+                        })
+                await ctx.send(f"✅ **{len(info['entries'])}** músicas da playlist **{playlist_title}** foram adicionadas à fila!")
+            else:
+                self.filas[guild_id].append({
+                    'title': info.get('title', 'Desconhecido'),
+                    'query': info.get('webpage_url', query)
+                })
+                await msg.edit(content=f"✅ Adicionado à fila: **{info.get('title')}**")
+
+        
+        if not voice_client.is_playing():
+            await self.play_next(ctx)
+            
+            await msg.delete()
+            return 
+        
+
+        ydl_opts_local = YTDL_OPTIONS.copy()
         
         if "list=" in query and ("youtube.com/" in query or "youtu.be/" in query):
             ydl_opts_local = YTDL_OPTIONS_PLAYLIST.copy()
             logger.info("Playlist detectada, usando modo de extração rápida.")
-        else:        
+        else:
             ydl_opts_local = YTDL_OPTIONS.copy()
-
+            
         try:
             loop = asyncio.get_event_loop()
             
@@ -174,7 +333,6 @@ class Musica(commands.Cog):
                 if entry:
                     self.filas[guild_id].append({
                         'title': entry.get('title', 'Desconhecido'),
-                        
                         'query': entry.get('url', entry.get('webpage_url'))
                     })
             
@@ -192,7 +350,7 @@ class Musica(commands.Cog):
         if not voice_client.is_playing():
             await self.play_next(ctx)
 
-    @commands.command(name="stop", aliases=["parar"])
+    @commands.command(name="stop", aliases=["parar", "sair"])
     async def stop(self, ctx):
         guild_id = ctx.guild.id
         voice_client = self.voice_clients.get(guild_id)
@@ -210,7 +368,7 @@ class Musica(commands.Cog):
     async def skip(self, ctx):
         voice_client = self.voice_clients.get(ctx.guild.id)
         if voice_client and voice_client.is_playing():
-            voice_client.stop()  # O 'after' da função play() vai chamar a próxima música
+            voice_client.stop() 
             await ctx.send("⏭️ Música pulada!")
         else:
             await ctx.send("Não há nada tocando para pular.")
